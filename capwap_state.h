@@ -35,7 +35,8 @@ enum {
     CAPWAP_IMAGE_DATA_TIMEOUT = 10 sec,
     CAPWAP_CONFIGURE_TIMEOUT = 30 sec,
     CAPWAP_DATA_CHECK_TIMEOUT = 10 sec,
-    CAPWAP_RUN_TIMEOUT = 10 sec,
+    CAPWAP_DATA_TRANSFER_TIMEOUT = 30 sec,
+    CAPWAP_ECHO_TIMEOUT = 10 sec,
 };
 
 extern const char *capwap_state_string[CAPWAP_STATE_MAX];

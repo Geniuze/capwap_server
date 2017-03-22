@@ -66,7 +66,13 @@ static bool capwap_packet_check(CCapwapHeader *cwheader, int state)
         return CAPWAP_PACKET_TYPE_JOIN_REQ == capwap_packet_type(cwheader);
     case CAPWAP_STATE_CONFIGURE:
         return CAPWAP_PACKET_TYPE_CONFIG_STATUS_REQ == capwap_packet_type(cwheader);
+    case CAPWAP_STATE_DATA_CHECK:
+        return CAPWAP_PACKET_TYPE_CHANGE_STATE_EVENT_REQ == capwap_packet_type(cwheader);
+    case CAPWAP_STATE_RUN:
+        return (CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ == capwap_packet_type(cwheader));
     default:
+        dlog(LOG_ERR, "%s.%d error state %d packet type %d",
+             __FILE__, __LINE__, state, capwap_packet_type(cwheader));
         break;
     }
     return false;
@@ -271,14 +277,78 @@ int capwap_state_configure(struct ap_dev *ap, CBuffer &buffer)
 }
 int capwap_state_data_check(struct ap_dev *ap, CBuffer &buffer)
 {
+    CCapwapHeader *preq = NULL;
+    string str = "";
+    CBusiness business;
+
+    uloop_timeout_cancel(&ap->cl->timeout);
     dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
-    ap->state ++;
+
+    preq = capwap_process_header(buffer, ap);
+    if (preq == NULL)
+    {
+        ap->state = CAPWAP_STATE_QUIT;
+        return CAPWAP_MESSAGE_DONE;
+    }
+    preq->Parse(buffer);
+    preq->SaveTo(str);
+
+    dlog(LOG_DEBUG, "%s", str.c_str());
+
+    business.set_business_type(CAPWAP_BUSINESS_DATA_CHECK);
+    business.set_business_string(str);
+
+    if (BUSINESS_SUCCESS != business.Process(ap))
+    {
+        ap->state = CAPWAP_STATE_QUIT;
+    }
+    else
+    {
+        ap->state = CAPWAP_STATE_RUN;
+        uloop_timeout_set(&ap->cl->timeout, CAPWAP_DATA_CHECK_TIMEOUT);
+    }
+
+    SAFE_DELETE(preq);
     return CAPWAP_MESSAGE_DONE;
 }
 int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
 {
+    CCapwapHeader *preq = NULL;
+    string str = "";
+    CBusiness business;
+    int timeout = CAPWAP_ECHO_TIMEOUT;
+
     dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
-    ap->state ++;
+    preq = capwap_process_header(buffer, ap);
+    if (preq == NULL)
+    {
+        return CAPWAP_MESSAGE_DONE;
+    }
+    preq->Parse(buffer);
+    preq->SaveTo(str);
+
+    dlog(LOG_DEBUG, "%s", str.c_str());
+
+    switch(capwap_packet_type(preq))
+    {
+    case CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ:
+        uloop_timeout_cancel(&ap->cl->timeout);
+        business.set_business_type(CAPWAP_BUSINESS_DATA_TRANSFER);
+        timeout = CAPWAP_DATA_TRANSFER_TIMEOUT;
+        break;
+    default:
+        dlog(LOG_ERR, "%s.%d Unknown packet type %d", __FILE__, __LINE__, capwap_packet_type(preq));
+        break;
+    }
+    business.set_business_string(str);
+
+    if (BUSINESS_SUCCESS != business.Process(ap))
+    {
+        ap->state = CAPWAP_STATE_QUIT;
+    }
+
+    uloop_timeout_set(&ap->cl->timeout, timeout);
+    SAFE_DELETE(preq);
     return CAPWAP_MESSAGE_DONE;
 }
 int capwap_state_reset(struct ap_dev *ap, CBuffer &buffer)

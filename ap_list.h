@@ -96,10 +96,10 @@
     DB_STRING_SPECTNUM_NAME" varchar(64) default '',"  \
     DB_STRING_STATION_DATA_COLLECTION" varchar(64) default ''," \
     DB_STRING_LAN_STRATEGY_NAME" varchar(64) default '', "  \
-    DB_STRING_RADIO_2G_STRATEGY_NAME" varchar(64) default '', " \
-    DB_STRING_RADIO_5G_STRATEGY_NAME" varchar(64) default '', " \
-    DB_STRING_WLAN_2G_STRATEGY_NAME" varchar(64) default '', "  \
-    DB_STRING_WLAN_5G_STRATEGY_NAME" varchar(64) default '', "  \
+    DB_STRING_RADIO_2G_STRATEGY_NAME" varchar(64) default 'default', " \
+    DB_STRING_RADIO_5G_STRATEGY_NAME" varchar(64) default 'default', " \
+    DB_STRING_WLAN_2G_STRATEGY_NAME" varchar(64) default 'default', "  \
+    DB_STRING_WLAN_5G_STRATEGY_NAME" varchar(64) default 'default', "  \
     DB_STRING_NTP_STRATEGY_NAME" varchar(64) default '',"   \
     DB_STRING_PORTAL_PARAM_CUSTOM_STRATEGY_NAME" varchar(64) default ''," \
     DB_STRING_LOAD_BALANCE_ENABLE" int(1) default 0," \
@@ -123,24 +123,27 @@
 #define DB_STRING_RADIO_2G_PROTECT_MODE "protect_mode"
 #define DB_STRING_RADIO_2G_PROBE_SUPPRESSION "probe_suppression"
 #define DB_STRING_RADIO_2G_DTIM_INTV "dtim_intv"
-#define DB_STRING_RADIO_2G_NOISE "noise"
-#define DB_STRING_RADIO_2G_CCA "cca"
+#define DB_STRING_RADIO_2G_CCA_ADJ "cca_adj"
+#define DB_STRING_RADIO_2G_CCA_THR "cca_thr"
 #define DB_STRING_RADIO_2G_A_MPDU "a_mpdu"
 #define DB_STRING_RADIO_2G_A_MSDU "a_msdu"
-#define DB_STRING_RADIO_2G_SEND_PKT_INTV "send_pkt_intv"
+#define DB_STRING_RADIO_2G_SHORT_GI "short_gi"
 #define DB_STRING_RADIO_2G_COUNTRY_CODE "country_code"
-#define DB_STRING_RADIO_2G_11NONLY "11nonly"
+#define DB_STRING_RADIO_2G_11NONLY "nonly"
 #define DB_STRING_RADIO_2G_SHORT_PREAMBLE "short_preamble"
 #define DB_STRING_RADIO_2G_AUTO_CHANNEL "auto_channel"
 #define DB_STRING_RADIO_2G_AUTO_POWER "auto_power"
-#define DB_STRING_RADIO_2G_PKT_POWER "pkt_power"
+#define DB_STRING_RADIO_2G_PKT_POWER_ENABLE "pkt_power_enable"
+#define DB_STRING_RADIO_2G_PKT_POWER_MIN_POWER "pkt_power_min_power"
+#define DB_STRING_RADIO_2G_PKT_POWER_MIN_THROUGHPUT_THRESHOLD "pkt_power_min_throughput_threshold"
+#define DB_STRING_RADIO_2G_PKT_POWER_MIN_RATE_THRESHOLD "pkt_power_min_rate_threshold"
 
 #define INIT_RADIO_2G_LIST_TABLE \
     "create table ["RADIO_2G_LIST"] (" \
     DB_STRING_RADIO_2G_STRATEGY_NAME" varchar(64) not null," \
     DB_STRING_RADIO_2G_ENABLE" int(1) default 1," \
-    DB_STRING_RADIO_2G_RADIO_TYPE" int(4) default 10," \
-    DB_STRING_RADIO_2G_CHANNEL" int(4) default 149," \
+    DB_STRING_RADIO_2G_RADIO_TYPE" int(4) default 13," \
+    DB_STRING_RADIO_2G_CHANNEL" int(4) default 6," \
     DB_STRING_RADIO_2G_TXPOWER" int(1) default 20," \
     DB_STRING_RADIO_2G_SPACE" int(1) default 3," \
     DB_STRING_RADIO_2G_CHWIDTH" int(1) default 0,"\
@@ -152,18 +155,21 @@
     DB_STRING_RADIO_2G_BEACON_SEND_SPEED" int(4) default 11," \
     DB_STRING_RADIO_2G_PROTECT_MODE" int(1) default 0," \
     DB_STRING_RADIO_2G_PROBE_SUPPRESSION" int(1) default 0," \
-    DB_STRING_RADIO_2G_DTIM_INTV" int(1) default 1," \
-    DB_STRING_RADIO_2G_NOISE" int(1) default 0," \
-    DB_STRING_RADIO_2G_CCA" int(1) default 10," \
+    DB_STRING_RADIO_2G_DTIM_INTV" int(4) default 1," \
+    DB_STRING_RADIO_2G_CCA_ADJ" int(4) default 0," \
+    DB_STRING_RADIO_2G_CCA_THR" int(4) default 10," \
     DB_STRING_RADIO_2G_A_MPDU" int(1) default 1," \
     DB_STRING_RADIO_2G_A_MSDU" int(1) default 1," \
-    DB_STRING_RADIO_2G_SEND_PKT_INTV" int(1) default 0," \
-    DB_STRING_RADIO_2G_COUNTRY_CODE" int(4) default 0," \
+    DB_STRING_RADIO_2G_SHORT_GI" int(1) default 0," \
+    DB_STRING_RADIO_2G_COUNTRY_CODE" char(8) default 'CN'," \
     DB_STRING_RADIO_2G_11NONLY" int(1) default 0," \
     DB_STRING_RADIO_2G_SHORT_PREAMBLE" int(1) default 0," \
     DB_STRING_RADIO_2G_AUTO_CHANNEL" int(1) default 0," \
     DB_STRING_RADIO_2G_AUTO_POWER" int(1) default 0," \
-    DB_STRING_RADIO_2G_PKT_POWER" int(1) default 0," \
+    DB_STRING_RADIO_2G_PKT_POWER_ENABLE" int(1) default 0," \
+    DB_STRING_RADIO_2G_PKT_POWER_MIN_POWER" int(1) default 0,"          \
+    DB_STRING_RADIO_2G_PKT_POWER_MIN_THROUGHPUT_THRESHOLD" int(4) default 0," \
+    DB_STRING_RADIO_2G_PKT_POWER_MIN_RATE_THRESHOLD" int(4) default 0," \
     "primary key('"DB_STRING_RADIO_2G_STRATEGY_NAME"')" \
     ")"
 
@@ -182,17 +188,20 @@
 #define DB_STRING_RADIO_5G_PROTECT_MODE "protect_mode"
 #define DB_STRING_RADIO_5G_PROBE_SUPPRESSION "probe_suppression"
 #define DB_STRING_RADIO_5G_DTIM_INTV "dtim_intv"
-#define DB_STRING_RADIO_5G_NOISE "noise"
-#define DB_STRING_RADIO_5G_CCA "cca"
+#define DB_STRING_RADIO_5G_CCA_ADJ "cca_adj"
+#define DB_STRING_RADIO_5G_CCA_THR "cca_thr"
 #define DB_STRING_RADIO_5G_A_MPDU "a_mpdu"
 #define DB_STRING_RADIO_5G_A_MSDU "a_msdu"
-#define DB_STRING_RADIO_5G_SEND_PKT_INTV "send_pkt_intv"
+#define DB_STRING_RADIO_5G_SHORT_GI "short_gi"
 #define DB_STRING_RADIO_5G_COUNTRY_CODE "country_code"
-#define DB_STRING_RADIO_5G_11NONLY "11nonly"
+#define DB_STRING_RADIO_5G_11NONLY "nonly"
 #define DB_STRING_RADIO_5G_SHORT_PREAMBLE "short_preamble"
 #define DB_STRING_RADIO_5G_AUTO_CHANNEL "auto_channel"
 #define DB_STRING_RADIO_5G_AUTO_POWER "auto_power"
-#define DB_STRING_RADIO_5G_PKT_POWER "pkt_power"
+#define DB_STRING_RADIO_5G_PKT_POWER_ENABLE "pkt_power_enable"
+#define DB_STRING_RADIO_5G_PKT_POWER_MIN_POWER "pkt_power_min_power"
+#define DB_STRING_RADIO_5G_PKT_POWER_MIN_THROUGHPUT_THRESHOLD "pkt_power_min_throughput_threshold"
+#define DB_STRING_RADIO_5G_PKT_POWER_MIN_RATE_THRESHOLD "pkt_power_min_rate_threshold"
 
 #define INIT_RADIO_5G_LIST_TABLE \
     "create table ["RADIO_5G_LIST"] ("                       \
@@ -211,18 +220,21 @@
     DB_STRING_RADIO_5G_BEACON_SEND_SPEED" int(4) default 11," \
     DB_STRING_RADIO_5G_PROTECT_MODE" int(1) default 0," \
     DB_STRING_RADIO_5G_PROBE_SUPPRESSION" int(1) default 0," \
-    DB_STRING_RADIO_5G_DTIM_INTV" int(1) default 1," \
-    DB_STRING_RADIO_5G_NOISE" int(1) default 0," \
-    DB_STRING_RADIO_5G_CCA" int(1) default 10," \
+    DB_STRING_RADIO_5G_DTIM_INTV" int(4) default 1," \
+    DB_STRING_RADIO_5G_CCA_ADJ" int(4) default 0," \
+    DB_STRING_RADIO_5G_CCA_THR" int(4) default 10," \
     DB_STRING_RADIO_5G_A_MPDU" int(1) default 1," \
     DB_STRING_RADIO_5G_A_MSDU" int(1) default 1," \
-    DB_STRING_RADIO_5G_SEND_PKT_INTV" int(1) default 0," \
-    DB_STRING_RADIO_5G_COUNTRY_CODE" int(4) default 0," \
+    DB_STRING_RADIO_5G_SHORT_GI" int(1) default 0," \
+    DB_STRING_RADIO_5G_COUNTRY_CODE" char(8) default 'CN'," \
     DB_STRING_RADIO_5G_11NONLY" int(1) default 0," \
     DB_STRING_RADIO_5G_SHORT_PREAMBLE" int(1) default 0," \
     DB_STRING_RADIO_5G_AUTO_CHANNEL" int(1) default 0," \
     DB_STRING_RADIO_5G_AUTO_POWER" int(1) default 0," \
-    DB_STRING_RADIO_5G_PKT_POWER" int(1) default 0," \
+    DB_STRING_RADIO_5G_PKT_POWER_ENABLE" int(1) default 0,"             \
+    DB_STRING_RADIO_5G_PKT_POWER_MIN_POWER" int(1) default 0,"          \
+    DB_STRING_RADIO_5G_PKT_POWER_MIN_THROUGHPUT_THRESHOLD" int(4) default 0," \
+    DB_STRING_RADIO_5G_PKT_POWER_MIN_RATE_THRESHOLD" int(4) default 0," \
     "primary key('"DB_STRING_RADIO_5G_STRATEGY_NAME"')" \
     ")"
 

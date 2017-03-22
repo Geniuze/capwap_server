@@ -371,7 +371,7 @@ public:
     vector<CWTPRadioConfTlv> radio_confs;
     vector<CWTPRadioInfoTlv> radio_infos;
     vector<CMacOperationTlv> mac_operations;
-    vector<CTxPowerTlv> tx_power;
+    vector<CTxPowerTlv> tx_powers;
     vector<CDSCtrolTlv> ds_ctrols;
     vector<COFDMCtrolTlv> ofdm_ctrols;
 
@@ -382,6 +382,71 @@ public:
         setMessageType(CAPWAP_PACKET_TYPE_CONFIG_STATUS_RSP);
     }
     ~CCapwapConfigureStatusRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapChangeStateReq : public CCapwapHeader {
+public:
+    vector<CRadioOperationalStateTlv> radio_operation_states;
+    CResultTlv result;
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CCapwapChangeStateReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_CHANGE_STATE_EVENT_REQ);
+    }
+    ~CCapwapChangeStateReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapChangeStateRsp : public CCapwapHeader {
+public:
+    CCapwapChangeStateRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_CHANGE_STATE_EVENT_RSP);
+    }
+    ~CCapwapChangeStateRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapDataTransferReq : public CCapwapHeader {
+public:
+    CDataTransferTlv data_transfer;
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CCapwapDataTransferReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ);
+    }
+    ~CCapwapDataTransferReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapDataTransferRsp : public CCapwapHeader {
+public:
+    CResultTlv result;
+public:
+    CCapwapDataTransferRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_DATA_TRANSFER_RSP);
+    }
+    ~CCapwapDataTransferRsp(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);

@@ -383,6 +383,8 @@ int CVSRadioProbeConfTlv::LoadFrom(kvlist &kv, string ex)
     probe_rssi = toInt(GetValue(kv, STRING_PROBE_RSSI + ex));
     min_contract_rate = toInt(GetValue(kv, STRING_MIN_CONTRACT_RATE + ex));
 
+    _elength = 21;
+
     return 0;
 }
 
@@ -429,6 +431,8 @@ int CVSTrafficStaticsTlv::LoadFrom(kvlist &kv, string ex)
 
     ts_interval = toInt(GetValue(kv, STRING_TRAFFIC_STATICS_INTERVAL + ex));
     ts_switch = toInt(GetValue(kv, STRING_TRAFFIC_SWITCH + ex));
+
+    _elength = 8;
 
     return 0;
 }

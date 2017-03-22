@@ -36,6 +36,12 @@ int CBusiness::Process(struct ap_dev *ap)
     case CAPWAP_BUSINESS_CONFIGURE:
         ret = business_configure_process(ap);
         break;
+    case CAPWAP_BUSINESS_DATA_CHECK:
+        ret = business_data_check_process(ap);
+        break;
+    case CAPWAP_BUSINESS_DATA_TRANSFER:
+        ret = business_data_transfer_process(ap);
+        break;
     default:
         dlog(LOG_ERR, "%s.%d unknown this business-type %d", __func__, __LINE__, business_type);
         break;
@@ -152,7 +158,7 @@ int CBusiness::business_join_process(struct ap_dev *ap)
         break;
     }
 
-    prsp = capwap_get_packet(CAPWAP_PACKET_TYPE_JOIN_RSP);
+    prsp = (CCapwapJoinRsp *)capwap_get_packet(CAPWAP_PACKET_TYPE_JOIN_RSP);
     if (NULL == prsp)
     {
         return BUSINESS_FAIL;
@@ -170,7 +176,7 @@ int CBusiness::business_join_process(struct ap_dev *ap)
     buffer.extend();
     prsp->Assemble(buffer);
 
-    ap->cl->write_cb(ap->cl, buffer.GetBuffer(), buffer.GetOffset());
+    ap->cl->write_cb(ap->cl, (char *)buffer.GetBuffer(), buffer.GetOffset());
 
     // 添加到ap列表
     add_ap_dev(ap);
@@ -182,6 +188,179 @@ int CBusiness::business_join_process(struct ap_dev *ap)
 int CBusiness::business_configure_process(struct ap_dev *ap)
 {
     // configure status req 的内容不需要处理，直接下发分组中的配置
+    CCapwapConfigureStatusRsp *prsp = NULL;
+    int i = 0;
+    string cond = "";
+    DBResult result;
+    vector<vector<string> > radio_config;
+    CBuffer buffer;
+    kvlist kv;
 
+    radio_config.resize(ap->max_radios);
+
+    // 查找2G射频信息
+    cond.append(DB_STRING_RADIO_2G_STRATEGY_NAME"=(");
+    cond.append("select "DB_STRING_RADIO_2G_STRATEGY_NAME" from "GROUP_LIST
+                " where "DB_STRING_GROUP_NAME"=(");
+    cond.append("select "DB_STRING_GROUP_NAME" from "AP_LIST
+                " where "DB_STRING_AP_MAC"='" + string(ap->hw_addr) + "'))");
+    DBI::Query(RADIO_2G_LIST, "*", result, cond.c_str());
+    if (result.size() != 1)
+    {
+        return BUSINESS_FAIL;
+    }
+    radio_config[0] = result[0];
+
+    // 查找5G射频信息
+    cond.clear();
+    cond.append(DB_STRING_RADIO_5G_STRATEGY_NAME"=(");
+    cond.append("select "DB_STRING_RADIO_5G_STRATEGY_NAME" from "GROUP_LIST
+                " where "DB_STRING_GROUP_NAME"=(");
+    cond.append("select "DB_STRING_GROUP_NAME" from "AP_LIST
+                " where "DB_STRING_AP_MAC"='" + string(ap->hw_addr) + "'))");
+    DBI::Query(RADIO_5G_LIST, "*", result, cond.c_str());
+    if (result.size() != 1)
+    {
+        return BUSINESS_FAIL;
+    }
+    radio_config[1] = result[0];
+
+    prsp = (CCapwapConfigureStatusRsp *)capwap_get_packet(CAPWAP_PACKET_TYPE_CONFIG_STATUS_RSP);
+    if (prsp == NULL)
+        return BUSINESS_FAIL;
+
+    // 将所有的消息元扩展为最大radios数，后面依据radio的类型发送对应的dsctrl 或者ofdmctrl
+
+    prsp->radio_admin_states.resize(ap->max_radios);
+    prsp->radio_confs.resize(ap->max_radios);
+    prsp->radio_infos.resize(ap->max_radios);
+    prsp->mac_operations.resize(ap->max_radios);
+    prsp->tx_powers.resize(ap->max_radios);
+    prsp->ds_ctrols.resize(ap->max_radios);
+    prsp->ofdm_ctrols.resize(ap->max_radios);
+    prsp->pay_loads.resize(ap->max_radios);
+
+    for (i = 0; i<ap->max_radios; i++)
+    {
+        prsp->radio_admin_states[i].setValid(true);
+        prsp->radio_confs[i].setValid(true);
+        prsp->radio_infos[i].setValid(true);
+        prsp->mac_operations[i].setValid(true);
+        prsp->tx_powers[i].setValid(true);
+
+        if (ap->radios[i].radio_type & RADIO_TYPE_11A) // 5G radio
+            prsp->ofdm_ctrols[i].setValid(true);
+        else // 2G radio
+            prsp->ds_ctrols[i].setValid(true);
+
+        prsp->pay_loads[i].setValid(true);
+        prsp->pay_loads[i].radio_conf.setValid(true);
+        prsp->pay_loads[i].abp_radio_conf.setValid(true);
+        prsp->pay_loads[i].radio_probe_conf.setValid(true);
+        prsp->pay_loads[i].packet_power_conf.setValid(true);
+        prsp->pay_loads[i].channel_reuse_conf.setValid(true);
+    }
+    // config status response除了radio配置之外还有一些其它配置项，默认放到第一个vendor内
+    prsp->pay_loads[0].ap_space_info.setValid(true);
+    prsp->pay_loads[0].echo_conf.setValid(true);
+    prsp->pay_loads[0].traffic_statics_conf.setValid(true);
+
+    for (uint32_t i=0; i<radio_config.size(); i++)
+    {
+        int radio_id = i+1;
+        SetValue(kv, STRING_RADIO_ID + toString(radio_id), toString(radio_id));
+        SetValue(kv, STRING_RADIO_STATE + toString(radio_id), radio_config[i][1]);
+        SetValue(kv, STRING_RADIO_TYPE_11B + toString(radio_id),
+                 toString((toInt(radio_config[i][2]) & RADIO_TYPE_11B)?1:0));
+        SetValue(kv, STRING_RADIO_TYPE_11A + toString(radio_id),
+                 toString((toInt(radio_config[i][2]) & RADIO_TYPE_11A)?1:0));
+        SetValue(kv, STRING_RADIO_TYPE_11G + toString(radio_id),
+                 toString((toInt(radio_config[i][2]) & RADIO_TYPE_11G)?1:0));
+        SetValue(kv, STRING_RADIO_TYPE_11N + toString(radio_id),
+                 toString((toInt(radio_config[i][2]) & RADIO_TYPE_11N)?1:0));
+        SetValue(kv, STRING_CURRENT_CHANNEL + toString(radio_id), radio_config[i][3]);
+        SetValue(kv, STRING_CURRENT_TXPOWER + toString(radio_id), radio_config[i][4]);
+        SetValue(kv, STRING_TX_ANTENNA + toString(radio_id), radio_config[i][5]);
+        SetValue(kv, STRING_RX_ANTENNA + toString(radio_id), radio_config[i][5]);
+        SetValue(kv, STRING_BAND_WIDTH + toString(radio_id), radio_config[i][6]);
+        SetValue(kv, STRING_RTS_THRESHOLD + toString(radio_id), radio_config[i][7]);
+        SetValue(kv, STRING_FRAG_THR + toString(radio_id), radio_config[i][8]);
+        SetValue(kv, STRING_BEACON_PERIOD + toString(radio_id), radio_config[i][9]);
+        SetValue(kv, STRING_ACK_TIMEOUT + toString(radio_id), radio_config[i][10]);
+        SetValue(kv, STRING_MIN_CONTRACT_RATE + toString(radio_id), radio_config[i][11]);
+        SetValue(kv, STRING_BEACON_RATE + toString(radio_id), radio_config[i][12]);
+        SetValue(kv, STRING_PROTECT_MODE + toString(radio_id), radio_config[i][13]);
+        SetValue(kv, STRING_PROBE_RSSI + toString(radio_id), radio_config[i][14]);
+        SetValue(kv, STRING_DTIM_PERIOD + toString(radio_id), radio_config[i][15]);
+        SetValue(kv, STRING_CCA_ADJ + toString(radio_id), radio_config[i][16]);
+        SetValue(kv, STRING_CCA_THR + toString(radio_id), radio_config[i][17]);
+        SetValue(kv, STRING_A_MPDU + toString(radio_id), radio_config[i][18]);
+        SetValue(kv, STRING_A_MSDU + toString(radio_id), radio_config[i][19]);
+        SetValue(kv, STRING_SHORT_GI + toString(radio_id), radio_config[i][20]);
+        SetValue(kv, STRING_COUNTRY_STRING + toString(radio_id), radio_config[i][21]);
+        SetValue(kv, STRING_11N_ONLY + toString(radio_id), radio_config[i][22]);
+        SetValue(kv, STRING_SHORT_PREAMBLE + toString(radio_id), radio_config[i][23]);
+        SetValue(kv, STRING_AUTO_CHANNEL_SWITCH + toString(radio_id), radio_config[i][24]);
+        SetValue(kv, STRING_AUTO_POWER_SWITCH + toString(radio_id), radio_config[i][25]);
+        SetValue(kv, STRING_PPC_ENABLE + toString(radio_id), radio_config[i][26]);
+        SetValue(kv, STRING_MIN_POWER + toString(radio_id), radio_config[i][27]);
+        SetValue(kv, STRING_MIN_THROUGHPUT_THRESHOLD + toString(radio_id), radio_config[i][28]);
+        SetValue(kv, STRING_MIN_RATE_THRESHOLD + toString(radio_id), radio_config[i][29]);
+    }
+
+    DumpKv(kv);
+
+    prsp->LoadFrom(kv);
+
+    buffer.extend(10240);
+    prsp->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(prsp);
+
+    return BUSINESS_SUCCESS;
+}
+
+int CBusiness::business_data_check_process(struct ap_dev *ap)
+{
+    CCapwapChangeStateRsp *prsp = NULL;
+    CBuffer buffer;
+
+    dlog(LOG_DEBUG, "%s.%d", __func__, __LINE__);
+    prsp = (CCapwapChangeStateRsp *)capwap_get_packet(CAPWAP_PACKET_TYPE_CHANGE_STATE_EVENT_RSP);
+    if (prsp == NULL)
+        return BUSINESS_FAIL;
+
+    buffer.extend();
+    prsp->Assemble(buffer);
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(prsp);
+    return BUSINESS_SUCCESS;
+}
+
+int CBusiness::business_data_transfer_process(struct ap_dev *ap)
+{
+    CCapwapDataTransferRsp *prsp = NULL;
+    CBuffer buffer;
+    kvlist kv;
+
+    dlog(LOG_DEBUG, "%s.%d", __func__, __LINE__);
+    prsp = (CCapwapDataTransferRsp *)capwap_get_packet(CAPWAP_PACKET_TYPE_DATA_TRANSFER_RSP);
+    if (prsp == NULL)
+        return BUSINESS_FAIL;
+
+    prsp->result.setValid(true);
+    SetValue(kv, STRING_RESULT_CODE, "0");
+
+    buffer.extend();
+    prsp->LoadFrom(kv);
+    prsp->Assemble(buffer);
+
+    // 发送此报文会导致AP永远无法上线
+    // ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(prsp);
     return BUSINESS_SUCCESS;
 }

@@ -30,7 +30,5 @@ private:
 	static sqlite3 * _db_handle;
 };
 
-int init_db(const char *file, const char *describe);
-
 
 #endif

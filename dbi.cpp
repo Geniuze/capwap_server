@@ -105,18 +105,5 @@ int DBI::exec(const char * sql, char ** errmsg)
 	return err;
 }
 
-int init_db(const char *file, const char *init_sql)
-{
-    struct stat st;
-    char *err = NULL;
 
-    if (stat(file, &st) != 0)
-    {
-        DBI::Open(file);
-        DBI::exec(init_sql, &err);
-        DBI::Close();
-    }
-    DBI::Open(file);
-    return 0;
-}
 

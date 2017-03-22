@@ -7,9 +7,11 @@
 
 enum
 {
-    CAPWAP_BUSINESS_DISCOVERY, // 终端上线业务处理类型
-    CAPWAP_BUSINESS_JOIN, // 终端加入业务处理类型
-    CAPWAP_BUSINESS_CONFIGURE, //终端请求配置业务处理
+    CAPWAP_BUSINESS_DISCOVERY, // AP上线业务处理类型
+    CAPWAP_BUSINESS_JOIN, // AP加入业务处理类型
+    CAPWAP_BUSINESS_CONFIGURE, //AP请求配置业务处理
+    CAPWAP_BUSINESS_DATA_CHECK, // AP 数据检查状态业务处理
+    CAPWAP_BUSINESS_DATA_TRANSFER, // AP 数据上传业务处理
     CAPWAP_BUSINESS_MAX, //业务处理最大值
 };
 enum
@@ -41,6 +43,8 @@ public:
     int business_discovery_process(struct ap_dev *ap);
     int business_join_process(struct ap_dev *ap);
     int business_configure_process(struct ap_dev *ap);
+    int business_data_check_process(struct ap_dev *ap);
+    int business_data_transfer_process(struct ap_dev *ap);
 
     void set_business_type(int type)
     {

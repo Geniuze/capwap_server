@@ -36,6 +36,22 @@ string toString(char *value)
     return ss.str();
 }
 
+string toString(uint8_t value)
+{
+    stringstream ss;
+    ss << (uint32_t)value;
+
+    return ss.str();
+}
+
+string toString(uint16_t value)
+{
+    stringstream ss;
+    ss << (uint32_t)value;
+
+    return ss.str();
+}
+
 uint32_t toInt(string value)
 {
     stringstream ss;

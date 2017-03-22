@@ -9,5 +9,6 @@ string GetValue(kvlist &kv, string key);
 bool IsSet(kvlist &kv, string key);
 int SetValue(kvlist &kv, string key, string value);
 int SetValue(kvlist &kv, const char *key, const char *value);
+int DumpKv(kvlist &kv);
 
 #endif

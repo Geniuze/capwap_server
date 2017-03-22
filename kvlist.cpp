@@ -63,3 +63,17 @@ int SetValue(kvlist &kv, const char *key, const char *value)
     SetValue(kv, skey, svalue);
     return 0;
 }
+
+int DumpKv(kvlist &kv)
+{
+    kvlist::iterator  it = kv.begin();
+    string dumpstr;
+    for (; it != kv.end(); it++)
+    {
+        dumpstr.append(it->first + "=" + it->second + ";");
+    }
+
+    dlog(LOG_DEBUG, "%s", dumpstr.c_str());
+
+    return 0;
+}

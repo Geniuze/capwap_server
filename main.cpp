@@ -9,6 +9,8 @@ using namespace std;
 #include <netinet/in.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <sys/stat.h>
+
 
 extern "C" {
 #include "libubus.h"
@@ -33,13 +35,40 @@ int init_config()
     return 0;
 }
 
+int init_db(const char *file)
+{
+    struct stat st;
+    char *err = NULL;
+
+    if (stat(file, &st) != 0)
+    {
+        DBI::Open(file);
+        DBI::exec(INIT_AP_LIST_TABLE, &err);
+        DBI::exec(INIT_GROUP_LIST_TABLE, &err);
+        DBI::exec(INIT_RADIO_2G_LIST_TABLE, &err);
+        DBI::exec(INIT_RADIO_5G_LIST_TABLE, &err);
+        DBI::Close();
+    }
+    DBI::Open(file);
+    return 0;
+}
+
+int init_db_data()
+{
+    DBI::Insert(GROUP_LIST, DB_STRING_GROUP_NAME, "'default'");
+    DBI::Insert(RADIO_2G_LIST, DB_STRING_RADIO_2G_STRATEGY_NAME, "'default'");
+    DBI::Insert(RADIO_5G_LIST, DB_STRING_RADIO_5G_STRATEGY_NAME, "'default'");
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     //daemon(0,0);
     dopenlog("capwap_server", LOG_CONS | LOG_PID, 0);
     init_config();
 
-    init_db(CAPWAP_SERVER_DB, INIT_AP_LIST_TABLE);
+    init_db(CAPWAP_SERVER_DB);
+    init_db_data();
 
     server_run();
 

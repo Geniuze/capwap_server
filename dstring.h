@@ -51,6 +51,7 @@
 #define STRING_ENCRYPT_CAPABILITIES "encrypt_capabilities"
 #define STRING_RESULT_CODE "result_code"
 #define STRING_RADIO_STATE "radio_state"
+#define STRING_RADIO_CAUSE "radio_cause"
 #define STRING_RTS_THRESHOLD "rts_threshold"
 #define STRING_SHORT_RETRY "short_retry"
 #define STRING_FRAG_THR "frag_thr"
@@ -88,11 +89,16 @@
 #define STRING_CCA_ADJ "cca_adj"
 #define STRING_CCA_THR "cca_thr"
 #define STRING_AP_SPACE "ap_space"
+#define STRING_DATA_TYPE "data_type"
+#define STRING_DATA_MODE "data_mode"
+#define STRING_DATA_DATA "data"
 
 string toString(uint32_t value);
 string toString(int value);
 string toString(time_t value);
 string toString(char *value);
+string toString(uint8_t value);
+string toString(uint16_t value);
 uint32_t toInt(string value);
 uint64_t toInt64(string value);
 vector<string> split(string &str, string d=";");

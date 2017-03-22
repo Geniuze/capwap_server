@@ -160,17 +160,20 @@ int ap_dev_load_from_db(struct ap_dev *ap, vector<string> &row)
 
 int ap_dev_set_radios(struct ap_dev *ap, kvlist &kv)
 {
-    for (int i=1; i<=MAX_RADIOS; ++i)
+    for (int i=0; i<MAX_RADIOS; ++i)
     {
-        if (IsSet(kv, STRING_RADIO_ID + toString(i)))
-        {
-            string s_radio_type_11a = GetValue(kv, STRING_RADIO_TYPE_11A + toString(i));
-            string s_radio_type_11b = GetValue(kv, STRING_RADIO_TYPE_11B + toString(i));
-            string s_radio_type_11g = GetValue(kv, STRING_RADIO_TYPE_11G + toString(i));
-            string s_radio_type_11n = GetValue(kv, STRING_RADIO_TYPE_11N + toString(i));
+        // 此处有坑，下标为0存放的是radio id为1的射频信息
+        int radio_id = i+1;
 
-            ap->max_radios = i;
-            ap->radios[i].radio_id = i;
+        if (IsSet(kv, STRING_RADIO_ID + toString(radio_id)))
+        {
+            string s_radio_type_11a = GetValue(kv, STRING_RADIO_TYPE_11A + toString(radio_id));
+            string s_radio_type_11b = GetValue(kv, STRING_RADIO_TYPE_11B + toString(radio_id));
+            string s_radio_type_11g = GetValue(kv, STRING_RADIO_TYPE_11G + toString(radio_id));
+            string s_radio_type_11n = GetValue(kv, STRING_RADIO_TYPE_11N + toString(radio_id));
+
+            ap->max_radios = radio_id;
+            ap->radios[i].radio_id = radio_id;
             if (toInt(s_radio_type_11a) == 1)
                 ap->radios[i].radio_type |= RADIO_TYPE_11A;
             if (toInt(s_radio_type_11b) == 1)

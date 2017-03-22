@@ -313,7 +313,7 @@ private:
     uint8_t dtim_period;
     uint8_t bssid[6];
     uint16_t beacon_period;
-    string country_string;
+    uint8_t country_string[4];
 public:
     CWTPRadioConfTlv()
     {
@@ -324,6 +324,7 @@ public:
         dtim_period = 0;
         bzero(bssid, sizeof(bssid));
         beacon_period = 0;
+        bzero(country_string, sizeof(country_string));
     }
     ~CWTPRadioConfTlv(){}
 
@@ -437,7 +438,7 @@ public:
 
 class COFDMCtrolTlv : public CElement
 {
-public:
+private:
 	uint8_t		radio_id;
 	uint8_t		reserved;
 	uint8_t		current_channel;
@@ -455,6 +456,48 @@ public:
         ti_threshold = 0;
     }
     ~COFDMCtrolTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CRadioOperationalStateTlv : public CElement
+{
+private:
+    uint8_t radio_id;
+    uint8_t radio_op_state;
+    uint8_t radio_op_cause;
+public:
+    CRadioOperationalStateTlv()
+    {
+        set_element_type(ELEMENT_RADIO_OPT_STATE);
+    }
+    ~CRadioOperationalStateTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CDataTransferTlv : public CElement
+{
+private:
+    uint8_t data_type;
+    uint8_t data_mode;
+    uint16_t data_length;
+    string data;
+public:
+    CDataTransferTlv()
+    {
+        set_element_type(ELEMENT_DATA_TRANS_DATA);
+        data_type = 0;
+        data_mode = 0;
+        data_length = 0;
+    }
+    ~CDataTransferTlv(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);

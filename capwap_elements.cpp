@@ -101,58 +101,18 @@ int CVendorSpecPayLoadTlv::Assemble(CBuffer &buffer)
     if (!isValid())
         return 0;
 
-    skipEH(buffer);
-
+    AssembleEH(buffer);
     buffer.store32(vendor_identifier);
-    _elength += 4;
 
-    if (ap_trans.isValid())
-    {
-        ap_trans.Assemble(buffer);
-        _elength += ap_trans.length() + 4;
-    }
-    if (radio_conf.isValid())
-    {
-        radio_conf.Assemble(buffer);
-        _elength += radio_conf.length() + 4;
-    }
-    if (ap_space_info.isValid())
-    {
-        ap_space_info.Assemble(buffer);
-        _elength += ap_space_info.length() + 4;
-    }
-    if (abp_radio_conf.isValid())
-    {
-        abp_radio_conf.Assemble(buffer);
-        _elength += abp_radio_conf.length() + 4;
-    }
-    if (radio_probe_conf.isValid())
-    {
-        radio_probe_conf.Assemble(buffer);
-        _elength += radio_probe_conf.length() + 4;
-    }
-    if (echo_conf.isValid())
-    {
-        echo_conf.Assemble(buffer);
-        _elength += echo_conf.length() + 4;
-    }
-    if (traffic_statics_conf.isValid())
-    {
-        traffic_statics_conf.Assemble(buffer);
-        _elength += traffic_statics_conf.length() + 4;
-    }
-    if (packet_power_conf.isValid())
-    {
-        packet_power_conf.Assemble(buffer);
-        _elength += packet_power_conf.length() + 4;
-    }
-    if (channel_reuse_conf.isValid())
-    {
-        channel_reuse_conf.Assemble(buffer);
-        _elength += channel_reuse_conf.length() + 4;
-    }
-
-    ReAssembleEH(buffer);
+    ap_trans.Assemble(buffer);
+    radio_conf.Assemble(buffer);
+    ap_space_info.Assemble(buffer);
+    abp_radio_conf.Assemble(buffer);
+    radio_probe_conf.Assemble(buffer);
+    echo_conf.Assemble(buffer);
+    traffic_statics_conf.Assemble(buffer);
+    packet_power_conf.Assemble(buffer);
+    channel_reuse_conf.Assemble(buffer);
 
     return 0;
 }
@@ -170,15 +130,54 @@ int CVendorSpecPayLoadTlv::LoadFrom(kvlist &kv,string ex)
     if (!isValid())
         return 0;
 
-    ap_trans.LoadFrom(kv, ex);
-    radio_conf.LoadFrom(kv, ex);
-    ap_space_info.LoadFrom(kv, ex);
-    abp_radio_conf.LoadFrom(kv, ex);
-    radio_probe_conf.LoadFrom(kv, ex);
-    echo_conf.LoadFrom(kv, ex);
-    traffic_statics_conf.LoadFrom(kv, ex);
-    packet_power_conf.LoadFrom(kv, ex);
-    channel_reuse_conf.LoadFrom(kv, ex);
+    vendor_identifier = DUNCHONG_IDENTIFY;
+    _elength += 4;
+
+    if (ap_trans.isValid())
+    {
+        ap_trans.LoadFrom(kv, ex);
+        _elength += ap_trans.length() + 4;
+    }
+    if (radio_conf.isValid())
+    {
+        radio_conf.LoadFrom(kv, ex);
+        _elength += radio_conf.length() + 4;
+    }
+    if (ap_space_info.isValid())
+    {
+        ap_space_info.LoadFrom(kv, ex);
+        _elength += ap_space_info.length() + 4;
+    }
+    if (abp_radio_conf.isValid())
+    {
+        abp_radio_conf.LoadFrom(kv, ex);
+        _elength += abp_radio_conf.length() + 4;
+    }
+    if (radio_probe_conf.isValid())
+    {
+        radio_probe_conf.LoadFrom(kv, ex);
+        _elength += radio_probe_conf.length() + 4;
+    }
+    if (echo_conf.isValid())
+    {
+        echo_conf.LoadFrom(kv, ex);
+        _elength += echo_conf.length() + 4;
+    }
+    if (traffic_statics_conf.isValid())
+    {
+        traffic_statics_conf.LoadFrom(kv, ex);
+        _elength += traffic_statics_conf.length() + 4;
+    }
+    if (packet_power_conf.isValid())
+    {
+        packet_power_conf.LoadFrom(kv, ex);
+        _elength += packet_power_conf.length() + 4;
+    }
+    if (channel_reuse_conf.isValid())
+    {
+        channel_reuse_conf.LoadFrom(kv, ex);
+        _elength += channel_reuse_conf.length() + 4;
+    }
 
     return 0;
 }
@@ -320,6 +319,21 @@ int CWTPDescriptorTlv::SaveTo(string &str)
     return 0;
 }
 
+int CResultTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive32(result);
+    return 0;
+}
+int CResultTlv::SaveTo(string &str)
+{
+    if (!isValid())
+        return 0;
+    str.append(STRING_RESULT_CODE"=" + toString(result) + ";");
+    return 0;
+}
 int CResultTlv::Assemble(CBuffer &buffer)
 {
     if (!isValid())
@@ -354,8 +368,7 @@ int CWTPRadioConfTlv::Parse(CBuffer &buffer)
     buffer.retrive8(dtim_period);
     buffer.retriverawbytes(bssid, sizeof(bssid));
     buffer.retrive16(beacon_period);
-    country_string.assign((const char *)buffer.GetPtr(), (uint32_t)(length()-12));
-    buffer.retriverawbytes(NULL, (size_t)(length()-12));
+    buffer.retriverawbytes(country_string, sizeof(country_string));
 
     return 0;
 }
@@ -397,7 +410,7 @@ int CWTPRadioConfTlv::Assemble(CBuffer &buffer)
     buffer.store8(dtim_period);
     buffer.storerawbytes(bssid, sizeof(bssid));
     buffer.store16(beacon_period);
-    buffer.storerawbytes((uint8_t*)country_string.c_str(), country_string.length());
+    buffer.storerawbytes(country_string, sizeof(country_string));
 
     return 0;
 }
@@ -421,8 +434,9 @@ int CWTPRadioConfTlv::LoadFrom(kvlist &kv, string ex)
     beacon_period = (uint16_t)toInt(GetValue(kv, STRING_BEACON_PERIOD + ex));
     _elength += 2;
 
-    country_string = GetValue(kv, STRING_COUNTRY_STRING + ex);
-    _elength += country_string.length();
+    string scountry = GetValue(kv, STRING_COUNTRY_STRING + ex);
+    strncpy((char *)country_string, scountry.c_str(), sizeof(country_string));
+    _elength += 4;
 
     return 0;
 }
@@ -618,6 +632,54 @@ int COFDMCtrolTlv::LoadFrom(kvlist &kv, string ex)
     ti_threshold = toInt(GetValue(kv, STRING_TI_THRESHOLD + ex));
 
     _elength = 8;
+
+    return 0;
+}
+
+int CRadioOperationalStateTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive8(radio_id);
+    buffer.retrive8(radio_op_state);
+    buffer.retrive8(radio_op_cause);
+
+    return 0;
+}
+
+int CRadioOperationalStateTlv::SaveTo(string &str)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_RADIO_ID + toString(radio_id) + "=" + toString(radio_id) + ";");
+    str.append(STRING_RADIO_STATE + toString(radio_id) + "=" + toString(radio_op_state) + ";");
+    str.append(STRING_RADIO_CAUSE + toString(radio_id) + "=" + toString(radio_op_cause) + ";");
+    return 0;
+}
+
+int CDataTransferTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive8(data_type);
+    buffer.retrive8(data_mode);
+    buffer.retrive16(data_length);
+    data.assign((char*)buffer.GetPtr(), data_length);
+    buffer.retriverawbytes(NULL, data_length);
+
+    return 0;
+}
+int CDataTransferTlv::SaveTo(string &str)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_DATA_TYPE"=" + toString(data_type) + ";");
+    str.append(STRING_DATA_MODE"=" + toString(data_mode) + ";");
+    str.append(STRING_DATA_DATA"=" + data + ";");
 
     return 0;
 }
