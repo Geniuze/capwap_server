@@ -2,11 +2,25 @@
 using namespace std;
 
 #include <string.h>
+#include <list>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+extern "C" {
+#include "libubus.h"
+#include "libubox/blobmsg.h"
+#include "libubox/blobmsg_json.h"
+#include "libubox/ustream.h"
+}
 
 #include "kvlist.h"
 #include "ap_list.h"
 #include "dstring.h"
 #include "log.h"
+#include "capwap_state.h"
 
 #define SAFE_ARRCOPY(dst, src) \
     strncpy((dst), (src), sizeof((dst)))
@@ -192,4 +206,35 @@ int ap_dev_set_radios(struct ap_dev *ap, kvlist &kv)
         }
     }
     return 0;
+}
+
+string ap_list_str()
+{
+    aplist::iterator it = aps.begin();
+    string str = "";
+    int i = 0;
+    for (; it != aps.end(); it++)
+    {
+        str.append(toString(i++) + string(" ") + it->first + string(" ") + it->second->lan_ip +
+                   string(" ") + capwap_state_string[it->second->state] + ";");
+    }
+    str.append("count : " + toString(i));
+
+    return str;
+}
+int ap_list_run_count()
+{
+    aplist::iterator it = aps.begin();
+    int i = 0;
+    for (; it != aps.end(); it++)
+    {
+        if (it->second->state == CAPWAP_STATE_RUN)
+            i++;
+    }
+
+    return i;
+}
+int ap_list_all_count()
+{
+    return aps.size();
 }

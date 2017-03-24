@@ -27,6 +27,7 @@ typedef enum {
     CAPWAP_MESSAGE_INVALID,
 }capwap_message_process_t;
 
+#define MAX_ECHO_TIMEOUT_CNT 3
 #define sec *1000
 
 enum {
@@ -37,12 +38,15 @@ enum {
     CAPWAP_DATA_CHECK_TIMEOUT = 10 sec,
     CAPWAP_DATA_TRANSFER_TIMEOUT = 30 sec,
     CAPWAP_ECHO_TIMEOUT = 10 sec,
+
+    CAPWAP_INIT_CONFIG_TIMEOUT = 1 sec, // 该定时器为接收到echo后多长时间后发送初始化报文
 };
 
 extern const char *capwap_state_string[CAPWAP_STATE_MAX];
 
 int capwap_read_cb(struct client *cl, char *buf, size_t len);
 int capwap_state_change_cb(struct client *cl);
+int capwap_state_timeout(struct client *cl);
 
 int capwap_state_start(struct ap_dev *ap, CBuffer &buffer);
 int capwap_state_idle(struct ap_dev *ap, CBuffer &buffer);

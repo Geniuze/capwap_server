@@ -52,6 +52,31 @@ string toString(uint16_t value)
     return ss.str();
 }
 
+uint8_t  toInt8(string value)
+{
+    stringstream ss;
+    uint32_t ret = 0;
+
+    ss << value;
+    ss >> ret;
+
+    return (uint8_t)ret;
+
+}
+
+uint16_t  toInt16(string value)
+{
+    stringstream ss;
+    uint32_t ret = 0;
+
+    ss << value;
+    ss >> ret;
+
+    return (uint16_t)ret;
+
+}
+
+
 uint32_t toInt(string value)
 {
     stringstream ss;

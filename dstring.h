@@ -12,7 +12,13 @@
 #define ETHER_ADDR_VAL(addr) (addr[0]),(addr[1]),   \
         (addr[2]),(addr[3]),                        \
         (addr[4]),(addr[5])
+#define ETHER_ADDR_RVAL(addr) (&addr[0]),(&addr[1]), \
+        (&addr[2]),(&addr[3]), \
+        (&addr[4]),(&addr[5])
 
+#define IP_ADDR_FMT "%u.%u.%u.%u"
+#define IP_ADDR_VAL(addr) (addr[0]),(addr[1]),(addr[2]),(addr[3])
+#define IP_ADDR_RVAL(addr) (&addr[0]),(&addr[1]),(&addr[2]),(&addr[3])
 
 
 
@@ -99,6 +105,8 @@ string toString(time_t value);
 string toString(char *value);
 string toString(uint8_t value);
 string toString(uint16_t value);
+uint8_t  toInt8(string value);
+uint8_t  toInt16(string value);
 uint32_t toInt(string value);
 uint64_t toInt64(string value);
 vector<string> split(string &str, string d=";");

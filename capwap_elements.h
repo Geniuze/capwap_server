@@ -50,6 +50,10 @@ typedef enum
     ELEMENT_WTP_REBOOT_STATISTICS = 48,
     ELEMENT_WTP_STATIC_ADDR = 49,
     ELEMENT_ECN_SUPPORT = 53,		//移动标准已不使用
+
+    ELEMENT_OUTSIDE_RADIUS_INFO = 211,
+    ELEMENT_RFG_INFO_TLV = 215,
+
     ELEMENT_ADD_WLAN = 1024,
     ELEMENT_ANTENNA = 1025,
     ELEMENT_ASSIGNED_AP_BSSID = 1026,
@@ -91,7 +95,7 @@ typedef enum
     ELEMENT_CONF_INFO = 1102,
     ELEMENT_CONF_INFO_ALL = 1103,
 
-    LLEMENT_TERMINAL_DATA_SELECTION = 1104,
+    ELEMENT_TERMINAL_DATA_SELECTION = 1104,
     ELEMENT_VLAN_INTERFACE = 1107,
 
     ELEMENT_CONTROL_SET = 1108,
@@ -146,7 +150,8 @@ public:
 private:
     uint32_t vendor_identifier;
 public:
-    CAPLanIPTlv ap_lanip;
+
+    // AC ---> AP
     CAPTransConfTlv ap_trans;
     CVSRadioConfTlv radio_conf;
     CVSAPSpaceInfoTlv ap_space_info;
@@ -156,6 +161,58 @@ public:
     CVSTrafficStaticsTlv traffic_statics_conf;
     CVSPacketPowerConfTlv packet_power_conf;
     CVSChannelReuseConfTlv channel_reuse_conf;
+    CVSStationInfoReqTlv station_info_req;
+    // CVSPortalConfTlv portal_conf;   // not use
+    CVSMcastEnhanceTlv mcast_enhance;
+    CVSRadio11ACConfTlv radio_11ac;
+    CVSWlanInfoTlv wlan_info;
+    CVSReverseSSHTlv reverse_ssh;
+    CVS8021xConfTlv auth_8021x;
+    CVSSrcIPConfTlv src_ip_conf;
+    CVSNtpServerConfTlv ntp_server;
+    CVSPortalCustomConfTlv portal_custom;
+    CVSTimeStampConfTlv time_stamp;
+    CVSByPassConfTlv by_pass;
+
+    CVSAddAccessControlTlv add_access_ctrl;
+    CVSModifyAccessControlTlv modify_access_ctrl;
+    CVSDelAccessControlTlv del_access_ctrl;
+
+    CVSAddAccessRuleTlv add_access_rule;
+    CVSModifyAccessRuleTlv modify_access_rule;
+    CVSDelAccessRuleTlv del_access_rule;
+
+    CVSAddAccessStrategyTlv add_access_strategy;
+    CVSModifyAccessStrategyTlv modify_access_trategy;
+    CVSDelAccessStrategyTlv del_access_strategy;
+
+    CVSAddSpaceInfoTlv add_space_info;
+    CVSModifySpaceInfoTlv modify_space_info;
+    CVSDelSpaceInfoTlv del_space_info;
+
+    CVSAddTimeConfTlv add_time_conf;
+    CVSModifyTimeConfTlv modify_time_conf;
+    CVSDelTimeConfTlv del_time_conf;
+
+    CVSAddUserRoleTlv add_user_role;
+    CVSModifyUserRoleTlv modify_user_role;
+    CVSDelUserRoleTlv del_user_role;
+
+    // AP ---> AC
+    CVSResultStrTlv result_str;
+    CVSStationIPAddrTlv station_ip;
+    CVSReportStaInfoByMacTlv sta_info;      // 只上报请求的mac的信息
+    CVSActlReportStaInfoTlv actl_sta_info;  // 多个终端一起上报
+    CVSActlReportStaStateTlv sta_state;     // 多个Add Station
+    CVSReportAPInfoTlv ap_info;
+    // CVSStaRomingTlv sta_roming;  // not use
+    CAPLanIPTlv ap_lanip;
+    CVSStaAuthReqTlv sta_auth_req;          // 应该是SW解析HTTP响应后直接认证成功
+    CVSAutoChannelSelectInfoTlv auto_channel_select_info;
+
+    //  all
+    CVSActlUserInfoPktTlv actl_user_info;
+    CVSWxAuthInfoTlv wx_auth;
 };
 
 class CACNameTlv : public CElement
@@ -302,7 +359,6 @@ public:
     int LoadFrom(kvlist &kv, string ex="");
 };
 
-#endif
 
 class CWTPRadioConfTlv : public CElement
 {
@@ -355,7 +411,7 @@ public:
     int SaveTo(string &str);
     int LoadFrom(kvlist &kv, string ex="");
 };
-class CDSCtrolTlv : public CElement
+class CDSCtrlTlv : public CElement
 {
 private:
     uint8_t radio_id;
@@ -364,7 +420,7 @@ private:
     uint8_t cur_cca;
     uint32_t energy_detect_threshold;
 public:
-    CDSCtrolTlv()
+    CDSCtrlTlv()
     {
         set_element_type(ELEMENT_DIRECT_SEQU_CTL);
         radio_id = 0;
@@ -373,7 +429,7 @@ public:
         cur_cca = 0;
         energy_detect_threshold = 0;
     }
-    ~CDSCtrolTlv(){}
+    ~CDSCtrlTlv(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -436,7 +492,7 @@ public:
 };
 
 
-class COFDMCtrolTlv : public CElement
+class COFDMCtrlTlv : public CElement
 {
 private:
 	uint8_t		radio_id;
@@ -446,7 +502,7 @@ private:
 	uint32_t	ti_threshold;
 
 public:
-	COFDMCtrolTlv()
+	COFDMCtrlTlv()
     {
         set_element_type(ELEMENT_OFDM_CTL);
         radio_id = 0;
@@ -455,7 +511,7 @@ public:
         band_width = 0;
         ti_threshold = 0;
     }
-    ~COFDMCtrolTlv(){}
+    ~COFDMCtrlTlv(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -504,3 +560,962 @@ public:
     int SaveTo(string &str);
     int LoadFrom(kvlist &kv, string ex="");
 };
+
+class COutSideAuthConfTlv : public CElement
+{
+private:
+    uint8_t  enable;
+    uint32_t secret_len;
+    string   secret;
+    uint8_t  auth_ip_type;
+    uint8_t  auth_ip[16];
+    uint32_t auth_port;
+    uint8_t  account_ip_type;
+    uint8_t  account_ip[16];
+    uint32_t account_port;
+    uint32_t radius_force_offline_port;
+public:
+    COutSideAuthConfTlv()
+    {
+        set_element_type(ELEMENT_OUTSIDE_RADIUS_INFO);
+        enable = 0;
+        secret_len = 0;
+        auth_ip_type = 0;
+        bzero(auth_ip, sizeof(auth_ip));
+        auth_port = 0;
+        account_ip_type = 0;
+        bzero(account_ip, sizeof(account_ip));
+        account_port = 0;
+        radius_force_offline_port = 0;
+    }
+    ~COutSideAuthConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+
+class CAddDstWhiteConfTlv : public CElement
+{
+private:
+    uint32_t count;
+    vector<CDstAddr> dst_addrs;
+public:
+    CAddDstWhiteConfTlv()
+    {
+        set_element_type(ELEMENT_ADD_IP_DOMAIN_NAME_SETS);
+        count = 0;
+    }
+    ~CAddDstWhiteConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CDelDstWhiteConfTlv : public CElement
+{
+private:
+    uint32_t count;
+    vector<CDstAddr> dst_addrs;
+public:
+    CDelDstWhiteConfTlv()
+    {
+        set_element_type(ELEMENT_DEL_IP_DOMAIN_NAME_SETS);
+        count = 0;
+    }
+    ~CDelDstWhiteConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CNatDhcpConfTlv : public CElement
+{
+private:
+    uint8_t  enable;
+    uint8_t  nat_ip_type;
+    uint8_t  nat_ip[16];
+    uint32_t nat_netmask;
+
+    uint8_t  dhcp_start_ip_type;
+    uint8_t  dhcp_start_ip[16];
+    uint8_t  dhcp_end_ip_type;
+    uint8_t  dhcp_end_ip[16];
+    uint32_t dhcp_lease_time;
+public:
+    CNatDhcpConfTlv()
+    {
+        set_element_type(ELEMENT_NAT_AND_DHCP_CONFIG);
+        enable = 0;
+        nat_ip_type = 0;
+        bzero(nat_ip, sizeof(nat_ip));
+        nat_netmask = 0;
+        dhcp_start_ip_type = 0;
+        bzero(dhcp_start_ip, sizeof(dhcp_start_ip));
+        dhcp_end_ip_type = 0;
+        bzero(dhcp_end_ip, sizeof(dhcp_end_ip));
+        dhcp_lease_time = 0;
+    }
+    ~CNatDhcpConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAPReportStationInfoEnableTlv : public CElement
+{
+private:
+    uint8_t enable;
+public:
+    CAPReportStationInfoEnableTlv()
+    {
+        set_element_type(ELEMENT_AP_REPORT_STA_SWITCH);
+        enable = 0;
+    }
+    ~CAPReportStationInfoEnableTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CRomingConfTlv : public CElement
+{
+private:
+    uint8_t  enable;
+    uint32_t signal;
+public:
+    CRomingConfTlv()
+    {
+        set_element_type(ELEMENT_WIRELESS_OPTIMIZATION_TLV);
+        enable = 0;
+        signal = 0;
+    }
+    ~CRomingConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CWirelessLocationConfTlv : public CElement
+{
+private:
+    uint8_t  wp_enable;
+    uint8_t  wp_intv;
+    uint8_t  wp_server_ip_type;
+    uint8_t  wp_server_ip[16];
+    uint16_t wp_server_port;
+    uint8_t  wp_scan_type;
+    uint8_t  wp_code;
+    uint8_t  wp_proto;
+
+    uint8_t  ef_enable;
+    uint8_t  ef_code;
+    uint8_t  ef_proto;
+    uint8_t  ef_intv;
+    uint8_t  ef_scan_type;
+    uint8_t  ef_server_ip_type;
+    uint8_t  ef_server_ip[16];
+    uint16_t ef_server_port;
+
+    uint16_t we_ad_intv;
+    uint32_t we_channel_2g;
+    uint32_t we_channel_5g;
+    uint16_t we_ad_rssi;
+public:
+    CWirelessLocationConfTlv()
+    {
+        set_element_type(ELEMENT_WIRELESS_LOCATION_TLV);
+        wp_enable = 0;
+        wp_intv = 0;
+        wp_server_ip_type = 0;
+        bzero(wp_server_ip, sizeof(wp_server_ip));
+        wp_server_port = 0;
+        wp_scan_type = 0;
+        wp_code = 0;
+        wp_proto = 0;
+
+        ef_enable = 0;
+        ef_code = 0;
+        ef_proto = 0;
+        ef_intv = 0;
+        ef_scan_type = 0;
+        ef_server_ip_type = 0;
+        bzero(ef_server_ip, sizeof(ef_server_ip));
+        ef_server_port = 0;
+
+        we_ad_intv = 0;
+        we_channel_2g = 0;
+        we_channel_5g = 0;
+        we_ad_rssi = 0;
+    }
+    ~CWirelessLocationConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CRfgConfTlv : public CElement
+{
+private:
+    uint8_t rfg_enable;
+    uint8_t rfg_assocmax;
+    uint8_t rfg_timeout;
+    uint8_t rfg_maxsta;
+    uint8_t rfg_method;
+public:
+    CRfgConfTlv()
+    {
+        set_element_type(ELEMENT_RFG_INFO_TLV);
+        rfg_enable = 0;
+        rfg_assocmax = 0;
+        rfg_timeout = 0;
+        rfg_maxsta = 0;
+        rfg_method = 0;
+    }
+    ~CRfgConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAPLoadBalanceConfTlv : public CElement
+{
+private:
+    uint8_t  load_balance_enable;
+    uint16_t load_balance_threshold;
+    uint16_t load_balance_interval;
+public:
+    CAPLoadBalanceConfTlv()
+    {
+        set_element_type(ELEMENT_AP_LOAD_BALANCE);
+        load_balance_enable = 0;
+        load_balance_threshold = 0;
+        load_balance_interval = 0;
+    }
+    ~CAPLoadBalanceConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CRateSetConfTlv : public CElement
+{
+private:
+    uint8_t radio_type_11a_len;
+    uint8_t radio_type_11a_rate[16];
+    uint8_t radio_type_11bg_len;
+    uint8_t radio_type_11bg_rate[16];
+    uint8_t radio_type_11n_len;
+    uint8_t radio_type_11n_rate[16];
+    uint8_t radio_type_11ac_len;
+    uint8_t radio_type_11ac_rate[16];
+public:
+    CRateSetConfTlv()
+    {
+        set_element_type(ELEMENT_WIRELESS_RATE_SET);
+        radio_type_11a_len = 0;
+        bzero(radio_type_11a_rate, sizeof(radio_type_11a_rate));
+        radio_type_11bg_len = 0;
+        bzero(radio_type_11bg_rate, sizeof(radio_type_11bg_rate));
+        radio_type_11n_len = 0;
+        bzero(radio_type_11n_rate, sizeof(radio_type_11n_rate));
+        radio_type_11ac_len = 0;
+        bzero(radio_type_11ac_rate, sizeof(radio_type_11ac_rate));
+    }
+    ~CRateSetConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CLowRssiRefuseConfTlv : public CElement
+{
+private:
+    uint8_t  low_rssi_refuse_enable;
+    uint32_t low_rssi_threshold;
+public:
+    CLowRssiRefuseConfTlv()
+    {
+        set_element_type(ELEMENT_LRSSI_REFUSE);
+        low_rssi_refuse_enable = 0;
+        low_rssi_threshold  = 0;
+    }
+    ~CLowRssiRefuseConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CCloudACAddrConfTlv : public CElement
+{
+private:
+    uint8_t cloud_addr_len;
+    string  cloud_addr;
+public:
+    CCloudACAddrConfTlv()
+    {
+        set_element_type(ELEMENT_CLOUD_AC_ADDR);
+        cloud_addr_len = 0;
+    }
+    ~CCloudACAddrConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CLocalACAddrConfTlv : public CElement
+{
+private:
+    uint8_t  ac_addr_len;
+    string   ac_addr;
+public:
+    CLocalACAddrConfTlv()
+    {
+        set_element_type(ELEMENT_LOCAL_AC_ADDR);
+        ac_addr_len = 0;
+    }
+    ~CLocalACAddrConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CConnectionModeConfTlv : public CElement
+{
+private:
+    uint8_t connection_mode;
+public:
+    CConnectionModeConfTlv()
+    {
+        set_element_type(ELEMENT_CONNECTION_MODE);
+        connection_mode = 0;
+    }
+    ~CConnectionModeConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CRunningModeConfTlv : public CElement
+{
+private:
+    uint8_t ap_running_mode;
+public:
+    CRunningModeConfTlv()
+    {
+        set_element_type(ELEMENT_RUNNING_MODE);
+        ap_running_mode = 0;
+    }
+    ~CRunningModeConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CStationDataCollectionConfTlv : public CElement
+{
+private:
+    uint8_t  msg_type;
+    uint8_t  enable;
+    uint32_t server_url_len;
+    string   server_url;
+    uint32_t scan_interval;
+public:
+    CStationDataCollectionConfTlv()
+    {
+        set_element_type(ELEMENT_TERMINAL_DATA_SELECTION);
+        msg_type = 0;
+        enable = 0;
+        server_url_len = 0;
+        scan_interval = 0;
+    }
+    ~CStationDataCollectionConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CSpectrumAnalysisConfTlv : public CElement
+{
+private:
+    uint8_t  spectrum_analysis_enable;
+    uint8_t  spectrum_analysis_mode;
+    uint16_t spectrum_analysis_port;
+public:
+    CSpectrumAnalysisConfTlv()
+    {
+        set_element_type(ELEMENT_SPECTRUM_ANALYSIS);
+        spectrum_analysis_enable = 0;
+        spectrum_analysis_mode = 0;
+        spectrum_analysis_port = 0;
+    }
+    ~CSpectrumAnalysisConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CLanVlanConfTlv : public CElement
+{
+private:
+    uint32_t lan_vlan_id;
+public:
+    CLanVlanConfTlv()
+    {
+        set_element_type(ELEMENT_VLAN_INTERFACE);
+        lan_vlan_id = 0;
+    }
+    ~CLanVlanConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAPReportStationInfoIntervalTlv : public CElement
+{
+private:
+    uint32_t interval;
+public:
+    CAPReportStationInfoIntervalTlv()
+    {
+        set_element_type(ELEMENT_STA_FLOW_REPORT_INTERVAL);
+        interval = 0;
+    }
+    ~CAPReportStationInfoIntervalTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAPPasswordConfTlv : public CElement
+{
+private:
+    uint32_t front_password_len;
+    string   front_password;
+    uint32_t ssh_password_len;
+    string   ssh_password;
+public:
+    CAPPasswordConfTlv()
+    {
+        set_element_type(ELEMENT_LOGIN_PASSWORD_AND_SSH_PASSWORD);
+        front_password_len = 0;
+        ssh_password_len = 0;
+    }
+    ~CAPPasswordConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAuditAppriConfTlv : public CElement
+{
+private:
+    uint8_t audit_enable;
+    uint8_t appri_enable;
+    uint8_t remote_sync_enable;
+    uint8_t opaque[3];
+public:
+    CAuditAppriConfTlv()
+    {
+        set_element_type(ELEMENT_CONTROL_SET);
+        audit_enable = 0;
+        appri_enable = 0;
+        remote_sync_enable = 0;
+        bzero(opaque, sizeof(opaque));
+    }
+    ~CAuditAppriConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CLanPortalConfTlv : public CElement
+{
+private:
+    uint32_t unitid;
+    uint32_t portal_enable;
+    uint32_t portal_url_len;
+    string   portal_url;
+    uint8_t  reserved[16];
+public:
+    CLanPortalConfTlv()
+    {
+        set_element_type(ELEMENT_LAN_PORTAL_TLV);
+        unitid = 0;
+        portal_enable = 0;
+        portal_url_len = 0;
+        bzero(reserved, sizeof(reserved));
+    }
+    ~CLanPortalConfTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAddDstBlackConfTlv : public CElement
+{
+public:
+    uint32_t count;
+    vector<CDstAddr> dst_blacks;
+
+    CAddDstBlackConfTlv()
+    {
+        set_element_type(ELEMENT_ADD_BLACK_IP_DOMAIN_NAME_SETS);
+        count = 0;
+    }
+    ~CAddDstBlackConfTlv(){}
+public:
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CDelDstBlackConfTlv : public CElement
+{
+public:
+    uint32_t count;
+    vector<CDstAddr> dst_blacks;
+
+    CDelDstBlackConfTlv()
+    {
+        set_element_type(ELEMENT_DEL_BLACK_IP_DOMAIN_NAME_SETS);
+        count = 0;
+    }
+    ~CDelDstBlackConfTlv(){}
+public:
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CConfInfoEntry
+{
+private:
+    uint32_t type;
+    uint32_t len;
+    string   value;
+public:
+    CConfInfoEntry()
+    {
+        type = 0;
+        len = 0;
+    }
+    ~CConfInfoEntry(){}
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+class CConfInfoTlv : public CElement
+{
+public:
+    uint32_t count;
+    vector<CConfInfoEntry> conf_infos;
+
+    CConfInfoTlv()
+    {
+        set_element_type(ELEMENT_CONF_INFO);
+        count = 0;
+    }
+    ~CConfInfoTlv(){}
+public:
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CConfInfoAllTlv : public CElement
+{
+private:
+    uint8_t  ac_addr_len;
+    string   ac_addr;
+    uint8_t  cloud_addr_len;
+    string   cloud_addr;
+    uint8_t  current_run_mode;
+public:
+    CConfInfoAllTlv()
+    {
+        set_element_type(ELEMENT_CONF_INFO_ALL);
+        ac_addr_len = 0;
+        cloud_addr_len = 0;
+        current_run_mode = 0;
+    }
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CACTimeStampTlv : public CElement
+{
+private:
+    uint32_t timestamp;
+public:
+    CACTimeStampTlv()
+    {
+        set_element_type(ELEMENT_AC_TIMESTAMP);
+        timestamp = 0;
+    }
+    ~CACTimeStampTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CImageIdentifierTlv : public CElement
+{
+private:
+    uint32_t vendor_id;
+    CImageIDDataDevModelTlv dev_model;
+    CImageIDDataSoftwareVersionTlv software_version;
+    CImageIDDataFileNameTlv file_name;
+    CImageIDDataFileServerTlv file_server;
+    CImageIDDataDownloadTypeTlv download_type;
+    CImageIDDataFtpUserNameTlv ftp_user_name;
+    CImageIDDataFtpPasswordTlv ftp_password;
+    CImageIDDataFtpPathTlv ftp_path;
+
+public:
+    CImageIdentifierTlv()
+    {
+        set_element_type(ELEMENT_IMAGE_IDENTIFIER);
+        vendor_id = 0;
+    }
+    ~CImageIdentifierTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAutoChannelSelectTlv : public CElement
+{
+private:
+    uint32_t identifier;
+    uint8_t  select_enable;
+    uint8_t  select_2g_channel;
+    uint8_t  select_5g_channel;
+public:
+    CAutoChannelSelectTlv()
+    {
+        set_element_type(ELEMENT_AUTO_CHANNEL_SELECT);
+    }
+    ~CAutoChannelSelectTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAddStationTlv : public CElement
+{
+private:
+    uint8_t  radio_id;
+    uint8_t  mac_len;
+    uint8_t  mac[6];
+    uint32_t vlan_id;
+    uint32_t wlan_id;
+    uint8_t  ssid_len;
+    string   ssid;
+public:
+    CAddStationTlv()
+    {
+        set_element_type(ELEMENT_ADD_STATION);
+        radio_id = 0;
+        mac_len = 0;
+        bzero(mac, sizeof(mac));
+        vlan_id = 0;
+        wlan_id = 0;
+        ssid_len = 0;
+    }
+    ~CAddStationTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CDelStationTlv : public CElement
+{
+private:
+    uint8_t  radio_id;
+    uint8_t  mac_len;
+    uint8_t  mac[6];
+    uint32_t wlan_id;
+public:
+    CDelStationTlv()
+    {
+        set_element_type(ELEMENT_DEL_STATION);
+        radio_id = 0;
+        mac_len = 0;
+        bzero(mac, sizeof(mac));
+        wlan_id = 0;
+    }
+    ~CDelStationTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CAddWlanTlv : public CElement
+{
+private:
+    uint8_t	 radio_id;
+	uint8_t	 wlan_id;
+    uint16_t capability;
+    uint8_t	 key_index;
+	uint8_t	 key_status;
+	uint16_t key_len;
+	uint8_t	 key[32];
+	uint32_t group_tsc32; // not use
+	uint16_t group_tsc16; // not use
+	uint8_t	 qos;         // not use
+	uint8_t	 auth_type;
+	uint8_t	 mac_mode;    // not use
+	uint8_t	 tunnel_mode; // not use
+	uint8_t	 hide_ssid;
+	string	 ssid;
+
+public:
+    CAddWlanTlv()
+    {
+        set_element_type(ELEMENT_ADD_WLAN);
+        radio_id = 0;
+        wlan_id = 0;
+        capability = 0;
+        key_index = 0;
+        key_status = 0;
+        key_len = 0;
+        bzero(key, sizeof(key));
+        group_tsc32 = 0;
+        group_tsc16 = 0;
+        qos = 0;
+        auth_type = 0;
+        mac_mode = 0;
+        tunnel_mode = 0;
+        hide_ssid = 0;
+    }
+    ~CAddWlanTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CDelWlanTlv : public CElement
+{
+private:
+    uint8_t	 radio_id;
+	uint8_t	 wlan_id;
+public:
+    CDelWlanTlv()
+    {
+        set_element_type(ELEMENT_DEL_WLAN);
+        radio_id = 0;
+        wlan_id = 0;
+    }
+    ~CDelWlanTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CUpdateWlanTlv : public CElement
+{
+private:
+    uint8_t  radio_id;
+    uint8_t  wlan_id;
+    uint16_t capability;
+    uint8_t  key_index;
+    uint8_t  key_status;
+    uint16_t key_length;
+    uint8_t  key[32];
+public:
+    CUpdateWlanTlv()
+    {
+        set_element_type(ELEMENT_UPDATE_WLAN);
+        radio_id = 0;
+        wlan_id = 0;
+        capability = 0;
+        key_index = 0;
+        key_status = 0;
+        key_length = 0;
+        bzero(key, sizeof(key));
+    }
+    ~CUpdateWlanTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class C80211InfomationTlv : public CElement
+{
+private:
+    uint8_t	 radio_id;
+	uint8_t	 wlan_id;
+#ifdef __mips32__
+    union {
+        uint8_t bp;
+        struct {
+            uint8_t B : 1;
+            uint8_t P : 1;
+            uint8_t reserved : 6;
+        }s;
+    }u_bp;
+#else
+    union {
+        uint8_t bp;
+        struct {
+            uint8_t reserved : 6;
+            uint8_t P : 1;
+            uint8_t B : 1;
+        }s;
+    }u_bp;
+#endif
+    CWpaMiniTlv wpa;
+    CRsnMiniTlv rsn;
+public:
+    C80211InfomationTlv()
+    {
+        set_element_type(ELEMENT_INFO_ELEMENT);
+        radio_id = 0;
+        wlan_id = 0;
+        u_bp.bp = 0;
+    }
+    ~C80211InfomationTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CInitDownLoadTlv : public CElement
+{
+private:
+public:
+    CInitDownLoadTlv()
+    {
+        set_element_type(ELEMENT_INIT_DOWNLOAD);
+    }
+    ~CInitDownLoadTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CImageDataTlv : public CElement
+{
+private:
+    uint8_t data[1024];
+public:
+    CImageDataTlv()
+    {
+        set_element_type(ELEMENT_IMAGE_DATA);
+    }
+    ~CImageDataTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CImageInfoTlv : public CElement
+{
+private:
+    uint32_t file_size;
+    uint64_t hash0;
+    uint64_t hash1;
+public:
+    CImageInfoTlv()
+    {
+        set_element_type(ELEMENT_IMAGE_INFO);
+    }
+    ~CImageInfoTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif

@@ -1,6 +1,8 @@
 #include <iostream>
 using namespace std;
 
+#include <vector>
+
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,33 +12,6 @@ using namespace std;
 #include "capwap_elements.h"
 #include "buffer.h"
 #include "dstring.h"
-
-
-int CElement::ParseEH(CBuffer &buffer)
-{
-    uint16_t type;
-
-    buffer.retrive16(type);
-    if (_etype == type)
-    {
-        buffer.retrive16(_elength);
-        setValid(true);
-        // dlog(LOG_DEBUG, "type %d length %d", _etype, _elength);
-        return 0;
-    }
-    else
-    {
-        buffer.revert(2);
-        return -1;
-    }
-}
-int CElement::AssembleEH(CBuffer &buffer)
-{
-    buffer.store16(_etype);
-    buffer.store16(_elength);
-
-    return 0;
-}
 
 int CWTPBoardDataTlv::Parse(CBuffer &buffer)
 {
@@ -489,7 +464,7 @@ int CTxPowerTlv::LoadFrom(kvlist &kv, string ex)
     return 0;
 }
 
-int CDSCtrolTlv::Parse(CBuffer &buffer)
+int CDSCtrlTlv::Parse(CBuffer &buffer)
 {
     if (0 != ParseEH(buffer))
         return 0;
@@ -501,7 +476,7 @@ int CDSCtrolTlv::Parse(CBuffer &buffer)
     buffer.retrive32(energy_detect_threshold);
     return 0;
 }
-int CDSCtrolTlv::SaveTo(string &str)
+int CDSCtrlTlv::SaveTo(string &str)
 {
     if (!isValid())
         return 0;
@@ -516,7 +491,7 @@ int CDSCtrolTlv::SaveTo(string &str)
                + toString((uint32_t)energy_detect_threshold) + ";");
     return 0;
 }
-int CDSCtrolTlv::Assemble(CBuffer &buffer)
+int CDSCtrlTlv::Assemble(CBuffer &buffer)
 {
     if (!isValid())
         return 0;
@@ -530,7 +505,7 @@ int CDSCtrolTlv::Assemble(CBuffer &buffer)
 
     return 0;
 }
-int CDSCtrolTlv::LoadFrom(kvlist &kv, string ex)
+int CDSCtrlTlv::LoadFrom(kvlist &kv, string ex)
 {
     if (!isValid())
         return 0;
@@ -605,7 +580,7 @@ int CMacOperationTlv::LoadFrom(kvlist &kv, string ex)
     return 0;
 }
 
-int COFDMCtrolTlv::Assemble(CBuffer &buffer)
+int COFDMCtrlTlv::Assemble(CBuffer &buffer)
 {
     if (!isValid())
         return 0;
@@ -620,7 +595,7 @@ int COFDMCtrolTlv::Assemble(CBuffer &buffer)
 
     return 0;
 }
-int COFDMCtrolTlv::LoadFrom(kvlist &kv, string ex)
+int COFDMCtrlTlv::LoadFrom(kvlist &kv, string ex)
 {
     if (!isValid())
         return 0;
@@ -680,6 +655,149 @@ int CDataTransferTlv::SaveTo(string &str)
     str.append(STRING_DATA_TYPE"=" + toString(data_type) + ";");
     str.append(STRING_DATA_MODE"=" + toString(data_mode) + ";");
     str.append(STRING_DATA_DATA"=" + data + ";");
+
+    return 0;
+}
+
+int CAPReportStationInfoEnableTlv:Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(enable);
+
+    return 0;
+}
+
+int CAPReportStationInfoEnableTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    enable = toInt8(GetValue(kv, STRING_REPORT_STATION_INFO_ENABLE));
+
+    _elength = 1;
+    return 0;
+}
+
+int CRomingConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+    AssembleEH(buffer);
+
+    buffer.store8(enable);
+    buffer.store32(signal);
+
+    return 0;
+}
+
+int CRomingConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    enable = toInt8(GetValue(kv, STRING_ROMING_CONFIG_ENABLE));
+    signal = toInt(GetValue(kv, STIRNG_ROMING_CONFIG_SIGNAL));
+
+    return 0;
+}
+
+int CWirelessLocationConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.retrive8(wp_enable);
+    buffer.retrive8(wp_intv);
+    buffer.retrive8(wp_server_ip_type);
+    if (IP_TYPE_IPV4 == wp_server_ip_type)
+    {
+        buffer.retriverawbytes(wp_server_ip, 4);
+    }
+    else
+    {
+        buffer.retriverawbytes(wp_server_ip, 16);
+    }
+
+    // TODO not yet
+    return 0;
+
+}
+int CWirelessLocationConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    wp_enable = toInt8(GetValue(kv, STRING_WP_ENABLE));
+    _elength += 1;
+    wp_intv   = toInt8(GetValue(kv, STRING_WP_INTERVAL));
+    _elength += 1;
+    wp_server_ip_type = toInt8(GetValue(kv, STRING_WP_SERVER_IP_TYPE));
+    _elength += 1;
+    if (IP_TYPE_IPV4 == wp_server_ip_type)
+    {
+        int ipaddr[4] = {0};
+        string addr = GetValue(kv, STRING_WP_SERVER_IP_ADDR);
+        sscanf(addr.c_str(), IP_ADDR_FMT, IP_ADDR_RVAL(ipaddr));
+        wp_server_ip[0] = ipaddr[0];
+        wp_server_ip[1] = ipaddr[1];
+        wp_server_ip[2] = ipaddr[2];
+        wp_server_ip[3] = ipaddr[3];
+        _elength += 4;
+    }
+    else
+    {
+        _elength += 16;
+    }
+    wp_server_port = toInt16(GetValue(kv, STRING_WP_SERVER_PORT));
+    _elength += 2;
+    wp_scan_type = toInt8(GetValue(kv, STRING_WP_SCAN_TYPE));
+    _elength += 1;
+    wp_code = toInt8(GetValue(kv, STRING_WP_CODE));
+    _elength += 1;
+    wp_proto = toInt8(GetValue(kv, STRING_WP_PROTO));
+    _elength += 1;
+
+    ef_enable = toInt8(GetValue(kv, STRING_EF_ENABLE));
+    _elength += 1;
+    ef_code = toInt8(GetValue(kv, STIRNG_EF_CODE));
+    _elength += 1;
+    ef_proto = toInt8(GetValue(kv, STIRNG_EF_PROTO));
+    _elength += 1;
+    ef_intv = toInt8(GetValue(kv, STIRNG_EF_INTERVAL));
+    _elength += 1;
+    ef_scan_type = toInt8(GetValue(kv, STIRNG_EF_SCAN_TYPE));
+    _elength += 1;
+    ef_server_ip_type = toInt8(GetValue(kv, STIRNG_EF_SERVER_IP_TYPE));
+    _elength += 1;
+    if (IP_TYPE_IPV4 == ef_server_ip_type)
+    {
+        int ipaddr[4] = {0};
+        string addr = GetValue(kv, STRING_EF_SERVER_IP_ADDR);
+        sscanf(addr.c_str(), IP_ADDR_FMT, IP_ADDR_RVAL(ipaddr));
+        ef_server_ip[0] = ipaddr[0];
+        ef_server_ip[1] = ipaddr[1];
+        ef_server_ip[2] = ipaddr[2];
+        ef_server_ip[3] = ipaddr[3];
+        _elength += 4;
+    }
+    else
+    {
+        _elength += 16;
+    }
+    ef_server_port = toInt16(GetValue(kv, STRING_EF_SERVER_PORT));
+    _elength += 2;
+
+    we_ad_intv = toInt16(GetValue(kv, STRING_WE_AD_INTERVAL));
+    _elength += 2;
+    we_channel_2g = toInt32(GetValue(kv, STRING_WE_CHANNEL_2G));
+    _elength += 4;
+    we_channel_5g = toInt32(GetValue(kv, STRING_WE_CHANNEL_5G));
+    _elength += 4;
+    we_ad_rssi = toInt16(GetValue(kv, STRING_WE_AD_RSSI));
+    _elength += 2;
 
     return 0;
 }

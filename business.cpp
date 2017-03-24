@@ -42,6 +42,12 @@ int CBusiness::Process(struct ap_dev *ap)
     case CAPWAP_BUSINESS_DATA_TRANSFER:
         ret = business_data_transfer_process(ap);
         break;
+    case CAPWAP_BUSINESS_ECHO:
+        ret = business_echo_process(ap);
+        break;
+    case CAPWAP_BUSINESS_INIT_CONFIG:
+        ret = business_init_config_process(ap);
+        break;
     default:
         dlog(LOG_ERR, "%s.%d unknown this business-type %d", __func__, __LINE__, business_type);
         break;
@@ -236,8 +242,8 @@ int CBusiness::business_configure_process(struct ap_dev *ap)
     prsp->radio_infos.resize(ap->max_radios);
     prsp->mac_operations.resize(ap->max_radios);
     prsp->tx_powers.resize(ap->max_radios);
-    prsp->ds_ctrols.resize(ap->max_radios);
-    prsp->ofdm_ctrols.resize(ap->max_radios);
+    prsp->ds_ctrls.resize(ap->max_radios);
+    prsp->ofdm_ctrls.resize(ap->max_radios);
     prsp->pay_loads.resize(ap->max_radios);
 
     for (i = 0; i<ap->max_radios; i++)
@@ -249,9 +255,9 @@ int CBusiness::business_configure_process(struct ap_dev *ap)
         prsp->tx_powers[i].setValid(true);
 
         if (ap->radios[i].radio_type & RADIO_TYPE_11A) // 5G radio
-            prsp->ofdm_ctrols[i].setValid(true);
+            prsp->ofdm_ctrls[i].setValid(true);
         else // 2G radio
-            prsp->ds_ctrols[i].setValid(true);
+            prsp->ds_ctrls[i].setValid(true);
 
         prsp->pay_loads[i].setValid(true);
         prsp->pay_loads[i].radio_conf.setValid(true);
@@ -307,6 +313,9 @@ int CBusiness::business_configure_process(struct ap_dev *ap)
         SetValue(kv, STRING_MIN_THROUGHPUT_THRESHOLD + toString(radio_id), radio_config[i][28]);
         SetValue(kv, STRING_MIN_RATE_THRESHOLD + toString(radio_id), radio_config[i][29]);
     }
+    // TODO 设置echo超时的时间和间隔
+    SetValue(kv, STRING_ECHO_INTERVAL, toString(10));
+    SetValue(kv, STRING_ECHO_TIMEOUT_COUNT, toString(3));
 
     DumpKv(kv);
 
@@ -362,5 +371,68 @@ int CBusiness::business_data_transfer_process(struct ap_dev *ap)
     // ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
 
     SAFE_DELETE(prsp);
+    return BUSINESS_SUCCESS;
+}
+
+int CBusiness::business_echo_process(struct ap_dev *ap)
+{
+    CCapwapEchoRsp *prsp = NULL;
+    CBuffer buffer;
+
+    dlog(LOG_DEBUG, "%s.%d ", __func__, __LINE__);
+    prsp = (CCapwapEchoRsp*)capwap_get_packet(CAPWAP_PACKET_TYPE_ECHO_RSP);
+    if (NULL == prsp)
+        return BUSINESS_FAIL;
+
+    ap->echo_timeout_cnt = 0;
+    buffer.extend();
+    prsp->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(prsp);
+    return BUSINESS_SUCCESS;
+}
+
+int CBusiness::business_init_config_process(struct ap_dev* ap)
+{
+    dlog(LOG_DEBUG, "%s.%d", __func__, __LINE__);
+
+    if (BUSINESS_SUCCESS != business_init_ap_config(ap))
+    {
+        dlog(LOG_ERR, "%s.%d init ap config error", __func__, __LINE__);
+    }
+
+    return BUSINESS_SUCCESS;
+}
+
+int CBusiness::business_init_ap_config(struct ap_dev* ap)
+{
+    CCapwapAPConfReq *preq = NULL;
+    CBuffer buffer;
+
+    preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    // preq->outside_auth_conf.setValid(true); //小AC不支持外部radius配置
+    // preq->nat_dhcp_conf.setValid(true); //小AC不支持配置DHCP及NAT
+    preq->report_station_enable.setValid(true);
+    preq->roming_conf.setValid(true);
+    preq->wp_conf.setValid(true);
+    preq->rfg_conf.setValid(true);
+    preq->ap_lb_conf.setValid(true);
+    preq->rate_set_conf.setValid(true);
+    preq->low_rssi_conf.setValid(true);
+    preq->connection_mode_conf.setValid(true);
+    preq->sta_data_collection_conf.setValid(true);
+    preq->lan_vlan_conf.setValid(true);
+    preq->report_station_interval.setValid(true);
+    preq->audit_appri_conf.setValid(true);
+    preq->lan_portal_conf.setValid(true);
+    preq->pay_load.setValid(true);
+    preq->pay_load.portal_custom.setValid(true);
+    preq->pay_load.time_stamp.setValid(true);
+
     return BUSINESS_SUCCESS;
 }

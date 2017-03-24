@@ -2,6 +2,7 @@
 using namespace std;
 
 #include <string>
+#include <vector>
 
 #include <arpa/inet.h>
 #include <stdlib.h>
@@ -27,6 +28,71 @@ int CElement::ReAssembleEH(CBuffer &buffer)
     buffer.forward(_elength);
     return 0;
 }
+int CElement::ParseEH(CBuffer &buffer)
+{
+    uint16_t type;
+
+    buffer.retrive16(type);
+    if (_etype == type)
+    {
+        buffer.retrive16(_elength);
+        setValid(true);
+        // dlog(LOG_DEBUG, "type %d length %d", _etype, _elength);
+        return 0;
+    }
+    else
+    {
+        buffer.revert(2);
+        return -1;
+    }
+}
+int CElement::AssembleEH(CBuffer &buffer)
+{
+    buffer.store16(_etype);
+    buffer.store16(_elength);
+
+    return 0;
+}
+
+int CMiniElement::skipEH(CBuffer &buffer)
+{
+    buffer.forward(2);
+    return 0;
+}
+int CMiniElement::ReAssembleEH(CBuffer &buffer)
+{
+    buffer.revert(_elength+2);
+    AssembleEH(buffer);
+    buffer.forward(_elength);
+    return 0;
+}
+int CMiniElement::ParseEH(CBuffer &buffer)
+{
+    uint8_t type;
+
+    buffer.retrive8(type);
+    if (_etype == type)
+    {
+        buffer.retrive8(_elength);
+        setValid(true);
+        // dlog(LOG_DEBUG, "type %d length %d", _etype, _elength);
+        return 0;
+    }
+    else
+    {
+        buffer.revert(1);
+        return -1;
+    }
+}
+int CMiniElement::AssembleEH(CBuffer &buffer)
+{
+    buffer.store8(_etype);
+    buffer.store8(_elength);
+
+    return 0;
+}
+
+
 int CWTPModelNumber::Parse(CBuffer &buffer)
 {
     if (0 != ParseEH(buffer))
@@ -405,8 +471,8 @@ int CVSEchoConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    echo_interval = toInt(GetValue(kv, STRING_ECHO_INTERVAL + ex));
-    echo_timeout_cnt = toInt(GetValue(kv, STRING_ECHO_TIMEOUT_COUNT + ex));
+    echo_interval = toInt(GetValue(kv, STRING_ECHO_INTERVAL));
+    echo_timeout_cnt = toInt(GetValue(kv, STRING_ECHO_TIMEOUT_COUNT));
 
     _elength = 8;
     return 0;
@@ -445,8 +511,8 @@ int CVSNtpServerConfTlv::Assemble(CBuffer &buffer)
     AssembleEH(buffer);
 
     buffer.store16(interval);
-    buffer.store16(ntp_server_length);
-    buffer.storerawbytes((uint8_t*)ntp_server.c_str(), ntp_server_length);
+    buffer.store16(ntp_server_len);
+    buffer.storerawbytes((uint8_t*)server.c_str(), ntp_server_len);
 
     return 0;
 }
@@ -458,10 +524,10 @@ int CVSNtpServerConfTlv::LoadFrom(kvlist &kv, string ex)
     interval = (uint16_t)toInt(GetValue(kv, STRING_NTP_SERVER_INTERVAL + ex));
     _elength += 2;
 
-    ntp_server = GetValue(kv, STRING_NTP_SERVER);
-    _elength += ntp_server.length();
+    server = GetValue(kv, STRING_NTP_SERVER);
+    _elength += server.length();
 
-    ntp_server_length = ntp_server.length();
+    ntp_server_len = server.length();
     _elength += 2;
 
     return 0;

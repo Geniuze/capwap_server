@@ -12,6 +12,8 @@ enum
     CAPWAP_BUSINESS_CONFIGURE, //AP请求配置业务处理
     CAPWAP_BUSINESS_DATA_CHECK, // AP 数据检查状态业务处理
     CAPWAP_BUSINESS_DATA_TRANSFER, // AP 数据上传业务处理
+    CAPWAP_BUSINESS_ECHO, // 心跳业务处理
+    CAPWAP_BUSINESS_INIT_CONFIG, // AP 上线初始化业务
     CAPWAP_BUSINESS_MAX, //业务处理最大值
 };
 enum
@@ -45,6 +47,9 @@ public:
     int business_configure_process(struct ap_dev *ap);
     int business_data_check_process(struct ap_dev *ap);
     int business_data_transfer_process(struct ap_dev *ap);
+    int business_echo_process(struct ap_dev *ap);
+    int business_init_config_process(struct ap_dev* ap);
+    int business_init_ap_config(struct ap_dev* ap);
 
     void set_business_type(int type)
     {
@@ -53,6 +58,14 @@ public:
     void set_business_string(string &src)
     {
         src_info.assign(src);
+    }
+    uint32_t type()
+    {
+        return business_type;
+    }
+    string str()
+    {
+        return src_info;
     }
 };
 

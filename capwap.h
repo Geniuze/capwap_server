@@ -348,7 +348,7 @@ public:
     vector<CWTPRadioConfTlv> radio_confs;
     vector<CWTPRadioInfoTlv> radio_infos;
     vector<CTxPowerTlv> tx_powers;
-    vector<CDSCtrolTlv> ds_ctrols;
+    vector<CDSCtrlTlv> ds_ctrls;
 
     CVendorSpecPayLoadTlv pay_load;
 
@@ -372,8 +372,8 @@ public:
     vector<CWTPRadioInfoTlv> radio_infos;
     vector<CMacOperationTlv> mac_operations;
     vector<CTxPowerTlv> tx_powers;
-    vector<CDSCtrolTlv> ds_ctrols;
-    vector<COFDMCtrolTlv> ofdm_ctrols;
+    vector<CDSCtrlTlv> ds_ctrls;
+    vector<COFDMCtrlTlv> ofdm_ctrls;
 
     vector<CVendorSpecPayLoadTlv> pay_loads;
 public:
@@ -453,6 +453,388 @@ public:
     int SaveTo(string &str);
     int LoadFrom(kvlist &kv);
 };
+
+class CCapwapEchoReq : public CCapwapHeader {
+public:
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CCapwapEchoReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_ECHO_REQ);
+    }
+    ~CCapwapEchoReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapEchoRsp : public CCapwapHeader {
+public:
+    CCapwapEchoRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_ECHO_RSP);
+    }
+    ~CCapwapEchoRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapAPConfReq : public CCapwapHeader {
+public:
+    COutSideAuthConfTlv outside_auth_conf;
+    CAddDstWhiteConfTlv add_dst_white;
+    CDelDstWhiteConfTlv del_dst_white;
+    CNatDhcpConfTlv nat_dhcp_conf;
+    // CAutoChannelSelectTlv auto_channel_select; //原AC没有该选项 在config update request报文中发送
+    CAPReportStationInfoEnableTlv report_station_enable;
+    CRomingConfTlv roming_conf;
+    // CRomingNotice        romingNotice; // 废弃
+    // COffLineNotice        offlineNotice; // 废弃
+    CWirelessLocationConfTlv wp_conf;
+    CRfgConfTlv rfg_conf;
+    CAPLoadBalanceConfTlv ap_lb_conf;
+    CRateSetConfTlv rate_set_conf;
+    CLowRssiRefuseConfTlv low_rssi_conf;
+    CCloudACAddrConfTlv cloud_ac_conf;
+    CLocalACAddrConfTlv local_ac_conf;
+    CConnectionModeConfTlv connection_mode_conf;
+    CRunningModeConfTlv running_mode_conf;
+    CStationDataCollectionConfTlv sta_data_collection_conf;
+    CSpectrumAnalysisConfTlv spectrum_analysis_conf;
+    CLanVlanConfTlv lan_vlan_conf;
+    CAPReportStationInfoIntervalTlv report_station_interval;
+    CAPPasswordConfTlv ap_password_conf;
+    CAuditAppriConfTlv audit_appri_conf;
+    CLanPortalConfTlv lan_portal_conf;
+    CAddDstBlackConfTlv add_dst_black;
+    CDelDstBlackConfTlv del_dst_black;
+    CVendorSpecPayLoad pay_load;
+
+public:
+    CCapwapAPConfReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
+    }
+    ~CCapwapAPConfReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapAPConfRsp : public CCapwapHeader {
+public:
+    CResultTlv result;
+public:
+    CCapwapAPConfRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_AP_CONFIG_RSP);
+    }
+    ~CCapwapAPConfRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapAPInfoReq : public CCapwapHeader {
+public:
+    CConfInfoTlv conf_info;
+    CConfInfoAllTlv conf_info_all;
+public:
+    CCapwapAPInfoReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_AP_INFO_REQ);
+    }
+    ~CCapwapAPInfoReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+class CCapwapAPInfoRsp : public CCapwapHeader {
+public:
+    CResultTlv result;
+public:
+    CCapwapAPInfoRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_AP_INFO_RSP);
+    }
+    ~CCapwapAPInfoRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapConfigUpdateReq : public CCapwapHeader {
+public:
+    CACTimeStampTlv ac_time_stamp;
+    vector<CRadioAdminStateTlv> radio_admin_states;
+    vector<CWTPRadioConfTlv> radio_confs;
+    vector<CMacOperationTlv> mac_operations;
+    vector<CWTPRadioInfoTlv> radio_infos;
+    vector<CTxPowerTlv> tx_powers;
+    vector<CDSCtrlTlv> ds_ctrls;
+    vector<COFDMCtrlTlv> ofdm_ctrls;
+    vector<CVendorSpecPayLoadTlv> pay_loads;
+
+    CImageIdentifierTlv image_identifier;
+    // CImageUpdateCmdTlv image_updatecmd;
+    // CRougeAPScanCmdTlv rouge_ap_scancmd;
+    CAutoChannelSelectTlv auto_channel_select;
+    // CAddMacAclTlv add_mac_acl;
+    // CDelMacAclTlv del_mac_acl;
+
+public:
+    CCapwapConfigUpdateReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_CONFIG_UPDATE_REQ);
+    }
+    ~CCapwapConfigUpdateReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CCapwapConfigUpdateRsp : public CCapwapHeader {
+public:
+    CResultTlv result;
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CCapwapConfigUpdateRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_CONFIG_UPDATE_RSP);
+    }
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CWTPEventReq : public CCapwapHeader {
+public:
+    CAddStationTlv add_station;
+    CDelStationTlv del_station;
+    CDSCtrlTlv ds_ctrl;
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CWTPEventReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_WTP_EVENT_REQ);
+    }
+    ~CWTPEventReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CWTPEventRsp : public CCapwapHeader {
+public:
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CWTPEventRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_WTP_EVENT_RSP);
+    }
+    ~CWTPEventRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CResetReq : public CCapwapHeader {
+public:
+    CResetReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_RESET_REQ);
+    }
+    ~CResetReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CResetRsp : public CCapwapHeader {
+public:
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CResetRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_RESET_RSP);
+    }
+    ~CResetRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CStationConfigReq : public CCapwapHeader {
+public:
+    CAddStationTlv add_station;
+    CDelStationTlv del_station;
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CStationConfigReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_STATION_CONFIG_REQ);
+    }
+    ~CStationConfigReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CStationConfigRsp : public CCapwapHeader {
+public:
+    CResultTlv result;
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CStationConfigRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_STATION_CONFIG_RSP);
+    }
+    ~CStationConfigRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CWlanConfigReq : public CCapwapHeader {
+public:
+    vector<CAddWlanTlv> add_wlans;
+    vector<CDelWlanTlv> del_wlans;
+    vector<CUpdateWlanTlv> update_wlans;
+    vector<C80211InfomationTlv> infos;
+    vector<CVendorSpecPayLoadTlv> pay_loads;
+public:
+    CWlanConfigReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_WLAN_CONFIG_REQ);
+    }
+    ~CWlanConfigReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CWlanConfigRsp : public CCapwapHeader {
+public:
+    CResultTlv result;
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CWlanConfigRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_WLAN_CONFIG_RSP);
+    }
+    ~CWlanConfigRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CImageDataReq : public CCapwapHeader {
+public:
+    // AP ----> AC
+    CImageIdentifierTlv image_identifier;
+    CInitDownLoadTlv init_download;
+    CVendorSpecPayLoadTlv pay_load;
+
+    // AC ----> AP
+    CImageDataTlv image_data;
+    CImageInfoTlv image_info;
+public:
+    CImageDataReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_IMAGE_DATA_REQ);
+    }
+    ~CImageDataReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CImageDataRsp : public CCapwapHeader{
+public:
+    // AC ---> AP
+    CImageInfoTlv image_info;
+
+    // AP ---> AC
+    CResultTlv result;
+
+    // ALL
+    CVendorSpecPayLoadTlv pay_load;
+public:
+    CImageDataRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_IMAGE_DATA_RSP);
+    }
+    ~CImageDataRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CClearConfigReq : public CCapwapHeader {
+public:
+    CClearConfigReq()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_CLEAR_CONFIG_REQ);
+    }
+    ~CClearConfigReq(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
+class CClearConfigRsp : public CCapwapHeader {
+public:
+    CClearConfigRsp()
+    {
+        setMessageType(CAPWAP_PACKET_TYPE_CLEAR_CONFIG_RSP);
+    }
+    ~CClearConfigRsp(){}
+
+    int Parse(CBuffer &buffer);
+    int Assemble(CBuffer &buffer);
+    int SaveTo(string &str);
+    int LoadFrom(kvlist &kv);
+};
+
 
 
 

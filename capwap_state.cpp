@@ -69,7 +69,8 @@ static bool capwap_packet_check(CCapwapHeader *cwheader, int state)
     case CAPWAP_STATE_DATA_CHECK:
         return CAPWAP_PACKET_TYPE_CHANGE_STATE_EVENT_REQ == capwap_packet_type(cwheader);
     case CAPWAP_STATE_RUN:
-        return (CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ == capwap_packet_type(cwheader));
+        return (CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ == capwap_packet_type(cwheader)) ||
+               (CAPWAP_PACKET_TYPE_ECHO_REQ == capwap_packet_type(cwheader));
     default:
         dlog(LOG_ERR, "%s.%d error state %d packet type %d",
              __FILE__, __LINE__, state, capwap_packet_type(cwheader));
@@ -102,6 +103,39 @@ static CCapwapHeader * capwap_process_header(CBuffer &buffer, struct ap_dev *ap)
     if (ret_capwap_header) ret_capwap_header->setHeader(&cwheader);
 
     return ret_capwap_header;
+}
+
+// 该函为AP设备刚进入run状态时，需要发送wlanconfig,configupdate..等报文到AP，用以AP设备初始化
+static void capwap_state_run_initial_timeout(struct uloop_timeout *timeout)
+{
+    struct ap_dev * ap = container_of(timeout, struct ap_dev, init_timeout);
+    CBusiness business;
+
+    business.set_business_type(CAPWAP_BUSINESS_INIT_CONFIG);
+    if (BUSINESS_SUCCESS != business.Process(ap))
+    {
+        dlog(LOG_ERR, "%s.%d business %d error", __func__, __LINE__, CAPWAP_BUSINESS_INIT_CONFIG);
+    }
+}
+
+int capwap_state_timeout(struct client *cl)
+{
+    if (NULL == cl->ap)
+    {
+        cl->close_client_cb(cl);
+        return 0;
+    }
+    if (CAPWAP_STATE_RUN == cl->ap->state)
+    {
+        if (MAX_ECHO_TIMEOUT_CNT <= cl->ap->echo_timeout_cnt)
+        {
+            cl->close_client_cb(cl);
+            return 0;
+        }
+        cl->ap->echo_timeout_cnt++;
+        uloop_timeout_set(&cl->timeout, CAPWAP_ECHO_TIMEOUT);
+    }
+    return 0;
 }
 
 int capwap_read_cb(struct client *cl, char *buf, size_t len)
@@ -137,6 +171,11 @@ int capwap_read_cb(struct client *cl, char *buf, size_t len)
 int capwap_state_change_cb(struct client *cl)
 {
     // TODO 更新数据库相关数据，离线时间
+
+    dlog(LOG_ERR, "AP : %s-%s:%d is Quit", cl->ap->hw_addr,
+         cl->ap->lan_ip, ntohs(cl->peer_addr.sin_port));
+
+    del_ap_dev(cl->ap);
     SAFE_FREE(cl->ap); 
     return 0;
 }
@@ -316,9 +355,10 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
     CCapwapHeader *preq = NULL;
     string str = "";
     CBusiness business;
-    int timeout = CAPWAP_ECHO_TIMEOUT;
 
     dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
+    dlog(LOG_ERR, "AP %s-%s:%d is Running!", ap->hw_addr,
+         ap->lan_ip, ntohs(ap->cl->peer_addr.sin_port));
     preq = capwap_process_header(buffer, ap);
     if (preq == NULL)
     {
@@ -334,7 +374,19 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
     case CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ:
         uloop_timeout_cancel(&ap->cl->timeout);
         business.set_business_type(CAPWAP_BUSINESS_DATA_TRANSFER);
-        timeout = CAPWAP_DATA_TRANSFER_TIMEOUT;
+        uloop_timeout_set(&ap->cl->timeout, CAPWAP_DATA_TRANSFER_TIMEOUT);
+        break;
+    case CAPWAP_PACKET_TYPE_ECHO_REQ:
+        uloop_timeout_cancel(&ap->cl->timeout);
+        business.set_business_type(CAPWAP_BUSINESS_ECHO);
+        uloop_timeout_set(&ap->cl->timeout, CAPWAP_ECHO_TIMEOUT);
+
+        if (ap->echo_cnt == 0)
+        {
+            ap->init_timeout.cb = capwap_state_run_initial_timeout;
+            uloop_timeout_set(&ap->init_timeout, CAPWAP_INIT_CONFIG_TIMEOUT);
+            ap->echo_cnt++;
+        }
         break;
     default:
         dlog(LOG_ERR, "%s.%d Unknown packet type %d", __FILE__, __LINE__, capwap_packet_type(preq));
@@ -344,10 +396,11 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
 
     if (BUSINESS_SUCCESS != business.Process(ap))
     {
-        ap->state = CAPWAP_STATE_QUIT;
+        dlog(LOG_ERR, "%s.%d business process error business type %d str %s", __FILE__, __LINE__,
+             business.type(), business.str().c_str());
+        //ap->state = CAPWAP_STATE_QUIT;
     }
 
-    uloop_timeout_set(&ap->cl->timeout, timeout);
     SAFE_DELETE(preq);
     return CAPWAP_MESSAGE_DONE;
 }

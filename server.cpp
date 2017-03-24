@@ -27,7 +27,8 @@ list<struct client *> clients;
 static void client_timeout(struct uloop_timeout *timeout)
 {
     struct client *cl = container_of(timeout, struct client, timeout);
-    cl->close_client_cb(cl);
+
+    capwap_state_timeout(cl);
 }
 
 static void client_timeout_init(struct client *cl)
@@ -276,7 +277,7 @@ int tcp_close_client(struct client *cl)
     ustream_free(&cl->sfd.stream);
     close(cl->sfd.fd.fd);
     clients.remove(cl);
-    free(cl);
+    SAFE_FREE(cl);
 
     //uh_unblock_listeners(); //通知listener终端数减少，重新监听
     return 0;
@@ -292,7 +293,7 @@ int udp_close_client(struct client *cl)
     uloop_fd_delete(&cl->fd);
     close(cl->fd.fd);
     clients.remove(cl);
-    free(cl);
+    SAFE_FREE(cl);
 
     return 0;
 }

@@ -16,6 +16,7 @@ extern "C" {
 
 #include "log.h"
 #include "server.h"
+#include "ap_list.h"
 
 #define UBUS_OBJECT_NAME "capwap_server"
 
@@ -37,6 +38,16 @@ static const struct blobmsg_policy ap_list_policy[] = {
 static int dcac_ap_list(struct ubus_context *ctx, struct ubus_object *obj,
                         struct ubus_request_data *req, const char *method, struct blob_attr *msg)
 {
+    int run_count = ap_list_run_count();
+    int all_count = ap_list_all_count();
+
+    blob_buf_init(&b, 0);
+	blobmsg_add_u32(&b, "RUN", run_count);
+	blobmsg_add_u32(&b, "NOT RUN", all_count - run_count);
+	blobmsg_add_u32(&b, "ALL", all_count);
+	ubus_send_reply(ctx, req, b.head);
+
+    blob_buf_free(&b);
     return 0;
 }
 
