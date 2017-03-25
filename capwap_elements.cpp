@@ -659,7 +659,7 @@ int CDataTransferTlv::SaveTo(string &str)
     return 0;
 }
 
-int CAPReportStationInfoEnableTlv:Assemble(CBuffer &buffer)
+int CAPReportStationInfoEnableTlv::Assemble(CBuffer &buffer)
 {
     if (!isValid())
         return 0;
@@ -700,7 +700,7 @@ int CRomingConfTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
 
     enable = toInt8(GetValue(kv, STRING_ROMING_CONFIG_ENABLE));
-    signal = toInt(GetValue(kv, STIRNG_ROMING_CONFIG_SIGNAL));
+    signal = toInt(GetValue(kv, STRING_ROMING_CONFIG_SIGNAL));
 
     return 0;
 }
@@ -712,30 +712,53 @@ int CWirelessLocationConfTlv::Assemble(CBuffer &buffer)
 
     AssembleEH(buffer);
 
-    buffer.retrive8(wp_enable);
-    buffer.retrive8(wp_intv);
-    buffer.retrive8(wp_server_ip_type);
+    buffer.store8(wp_enable);
+    buffer.store8(wp_intv);
+    buffer.store8(wp_server_ip_type);
     if (IP_TYPE_IPV4 == wp_server_ip_type)
     {
-        buffer.retriverawbytes(wp_server_ip, 4);
+        buffer.storerawbytes(wp_server_ip, 4);
     }
     else
     {
-        buffer.retriverawbytes(wp_server_ip, 16);
+        buffer.storerawbytes(wp_server_ip, 16);
     }
+    buffer.store16(wp_server_port);
+    buffer.store8(wp_scan_type);
+    buffer.store8(wp_code);
+    buffer.store8(wp_proto);
 
-    // TODO not yet
+    buffer.store8(ef_enable);
+    buffer.store8(ef_code);
+    buffer.store8(ef_proto);
+    buffer.store8(ef_intv);
+    buffer.store8(ef_scan_type);
+    buffer.store8(ef_server_ip_type);
+    if (IP_TYPE_IPV4 == ef_server_ip_type)
+        buffer.storerawbytes(ef_server_ip, 4);
+    else
+        buffer.storerawbytes(ef_server_ip, 16);
+    buffer.store16(ef_server_port);
+
+    buffer.store16(we_ad_intv);
+    buffer.store32(we_channel_2g);
+    buffer.store32(we_channel_5g);
+    buffer.store16(we_ad_rssi);
+
     return 0;
 
 }
 int CWirelessLocationConfTlv::LoadFrom(kvlist &kv, string ex)
 {
+    if (!isValid())
+        return 0;
+
     wp_enable = toInt8(GetValue(kv, STRING_WP_ENABLE));
-    _elength += 1;
     wp_intv   = toInt8(GetValue(kv, STRING_WP_INTERVAL));
-    _elength += 1;
     wp_server_ip_type = toInt8(GetValue(kv, STRING_WP_SERVER_IP_TYPE));
-    _elength += 1;
+
+    _elength += 3;
+
     if (IP_TYPE_IPV4 == wp_server_ip_type)
     {
         int ipaddr[4] = {0};
@@ -752,26 +775,19 @@ int CWirelessLocationConfTlv::LoadFrom(kvlist &kv, string ex)
         _elength += 16;
     }
     wp_server_port = toInt16(GetValue(kv, STRING_WP_SERVER_PORT));
-    _elength += 2;
     wp_scan_type = toInt8(GetValue(kv, STRING_WP_SCAN_TYPE));
-    _elength += 1;
     wp_code = toInt8(GetValue(kv, STRING_WP_CODE));
-    _elength += 1;
     wp_proto = toInt8(GetValue(kv, STRING_WP_PROTO));
-    _elength += 1;
 
     ef_enable = toInt8(GetValue(kv, STRING_EF_ENABLE));
-    _elength += 1;
     ef_code = toInt8(GetValue(kv, STIRNG_EF_CODE));
-    _elength += 1;
     ef_proto = toInt8(GetValue(kv, STIRNG_EF_PROTO));
-    _elength += 1;
     ef_intv = toInt8(GetValue(kv, STIRNG_EF_INTERVAL));
-    _elength += 1;
     ef_scan_type = toInt8(GetValue(kv, STIRNG_EF_SCAN_TYPE));
-    _elength += 1;
     ef_server_ip_type = toInt8(GetValue(kv, STIRNG_EF_SERVER_IP_TYPE));
-    _elength += 1;
+
+    _elength += 11;
+
     if (IP_TYPE_IPV4 == ef_server_ip_type)
     {
         int ipaddr[4] = {0};
@@ -788,16 +804,254 @@ int CWirelessLocationConfTlv::LoadFrom(kvlist &kv, string ex)
         _elength += 16;
     }
     ef_server_port = toInt16(GetValue(kv, STRING_EF_SERVER_PORT));
-    _elength += 2;
 
     we_ad_intv = toInt16(GetValue(kv, STRING_WE_AD_INTERVAL));
-    _elength += 2;
-    we_channel_2g = toInt32(GetValue(kv, STRING_WE_CHANNEL_2G));
-    _elength += 4;
-    we_channel_5g = toInt32(GetValue(kv, STRING_WE_CHANNEL_5G));
-    _elength += 4;
+    we_channel_2g = toInt(GetValue(kv, STRING_WE_CHANNEL_2G));
+    we_channel_5g = toInt(GetValue(kv, STRING_WE_CHANNEL_5G));
     we_ad_rssi = toInt16(GetValue(kv, STRING_WE_AD_RSSI));
-    _elength += 2;
+
+    _elength += 14;
+    return 0;
+}
+
+int CRfgConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(rfg_enable);
+    buffer.store8(rfg_assocmax);
+    buffer.store8(rfg_timeout);
+    buffer.store8(rfg_maxsta);
+    buffer.store8(rfg_method);
 
     return 0;
 }
+int CRfgConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    rfg_enable = toInt8(GetValue(kv, STRING_RFG_ENABLE));
+    rfg_assocmax = toInt8(GetValue(kv, STRING_RFG_ASSOCMAX));
+    rfg_timeout = toInt8(GetValue(kv, STRING_RFG_TIMEOUT));
+    rfg_maxsta = toInt8(GetValue(kv, STRING_RFG_MAXSTA));
+    rfg_method = toInt8(GetValue(kv, STRING_RFG_METHOD));
+
+    _elength = 5;
+
+    return 0;
+}
+
+int CAPLoadBalanceConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+    AssembleEH(buffer);
+
+    buffer.store8(load_balance_enable);
+    buffer.store16(load_balance_threshold);
+    buffer.store16(load_balance_interval);
+
+    return 0;
+}
+int CAPLoadBalanceConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    load_balance_enable = toInt8(GetValue(kv, STRING_AP_LOADBALANCE_ENABLE));
+    load_balance_threshold = toInt16(GetValue(kv, STRING_AP_LOADBALANCE_THRESHOLD));
+    load_balance_interval = toInt16(GetValue(kv, STRING_AP_LOADBALANCE_INTERVAL));
+
+    _elength = 5;
+    return 0;
+}
+
+int CRateSetConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(radio_type_11a_len);
+    buffer.storerawbytes(radio_type_11a_rate, radio_type_11a_len);
+    buffer.store8(radio_type_11bg_len);
+    buffer.storerawbytes(radio_type_11bg_rate, radio_type_11bg_len);
+    buffer.store8(radio_type_11n_len);
+    buffer.storerawbytes(radio_type_11n_rate, radio_type_11n_len);
+    buffer.store8(radio_type_11ac_len);
+    buffer.storerawbytes(radio_type_11ac_rate, radio_type_11ac_len);
+
+    return 0;
+}
+
+int CRateSetConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    uint32_t rate;
+    if (!isValid())
+        return 0;
+
+    radio_type_11a_len = toInt8(GetValue(kv, STRING_RATE_SET_11A_LEN));
+    rate = toInt(GetValue(kv, STRING_RATE_SET_11A_RATE));
+    radio_type_11a_rate[0] = rate & 0xff;
+    radio_type_11a_rate[1] = rate & 0xff00;
+    radio_type_11a_rate[2] = rate & 0xff0000;
+    radio_type_11a_rate[3] = rate & 0xff000000;
+
+    radio_type_11bg_len = toInt8(GetValue(kv, STRING_RATE_SET_11BG_LEN));
+    rate = toInt(GetValue(kv, STRING_RATE_SET_11BG_RATE));
+    radio_type_11bg_rate[0] = rate & 0xff;
+    radio_type_11bg_rate[1] = rate & 0xff00;
+    radio_type_11bg_rate[2] = rate & 0xff0000;
+    radio_type_11bg_rate[3] = rate & 0xff000000;
+
+    radio_type_11n_len = toInt8(GetValue(kv, STRING_RATE_SET_11N_LEN));
+    rate = toInt(GetValue(kv, STRING_RATE_SET_11N_RATE));
+    radio_type_11n_rate[0] = rate & 0xff;
+    radio_type_11n_rate[1] = rate & 0xff00;
+    radio_type_11n_rate[2] = rate & 0xff0000;
+    radio_type_11n_rate[3] = rate & 0xff000000;
+
+    radio_type_11ac_len = toInt8(GetValue(kv, STRING_RATE_SET_11AC_LEN));
+    rate = toInt(GetValue(kv, STRING_RATE_SET_11AC_RATE));
+    radio_type_11ac_rate[0] = rate & 0xff;
+    radio_type_11ac_rate[1] = rate & 0xff00;
+    radio_type_11ac_rate[2] = rate & 0xff0000;
+    radio_type_11ac_rate[3] = rate & 0xff000000;
+
+    _elength = 4 + radio_type_11a_len + radio_type_11bg_len
+        + radio_type_11n_len + radio_type_11ac_len;
+
+    return 0;
+}
+
+int CLowRssiRefuseConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(low_rssi_refuse_enable);
+    buffer.store32(low_rssi_threshold);
+
+    return 0;
+}
+int CLowRssiRefuseConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    low_rssi_refuse_enable = toInt8(GetValue(kv, STRING_LOW_RSSI_REFUSE_ENABLE));
+    low_rssi_threshold = toInt(GetValue(kv, STRING_LOW_RSSI_THRESHOLD));
+
+    _elength = 5;
+
+    return 0;
+}
+
+int CLanVlanConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(lan_vlan_id);
+
+    return 0;
+}
+int CLanVlanConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    lan_vlan_id = toInt(GetValue(kv, STRING_LAN_VLAN_ID));
+    _elength = 4;
+
+    return 0;
+}
+
+int CAPReportStationInfoIntervalTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(interval);
+
+    return 0;
+}
+int CAPReportStationInfoIntervalTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    interval = toInt(GetValue(kv, STRING_REPORT_STATION_INFO_INTERVAL));
+    _elength = 4;
+
+    return 0;
+}
+
+int CAuditAppriConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(audit_enable);
+    buffer.store8(appri_enable);
+    buffer.store8(remote_sync_enable);
+    buffer.retriverawbytes(opaque, sizeof(opaque));
+
+    return 0;
+}
+int CAuditAppriConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    audit_enable = toInt(GetValue(kv, STRING_AUDIT_ENABLE));
+    appri_enable = toInt(GetValue(kv, STRING_APPRI_ENABLE));
+    remote_sync_enable = toInt(GetValue(kv, STRING_REMOTE_SYNC_ENABLE));
+    // opaque
+
+    _elength = 6;
+
+    return 0;
+}
+
+int CLanPortalConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(unitid);
+    buffer.store32(portal_enable);
+    buffer.store32(portal_url_len);
+    buffer.storerawbytes((uint8_t*)portal_url.c_str(), portal_url_len);
+    buffer.storerawbytes(reserved, sizeof(reserved));
+
+    return 0;
+}
+int CLanPortalConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    // unitid  //  not use
+    portal_enable = toInt(GetValue(kv, STRING_LAN_PORTAL_ENABLE));
+    portal_url = GetValue(kv, STRING_LAN_PORTAL_URL);
+    portal_url_len = portal_url.length();
+    // reserved
+
+    _elength = 12 + portal_url_len + 16;
+
+    return 0;
+}
+

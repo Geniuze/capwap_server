@@ -125,7 +125,7 @@ enum
 {
     IP_TYPE_IPV4 = 4,
     IP_TYPE_IPV6 = 6,
-}
+};
 
 
 class CBuffer;
@@ -957,20 +957,33 @@ public:
     int LoadFrom(kvlist &kv, string ex);
 };
 
+class CPortalCustom : public CElement
+{
+private:
+    uint16_t key_len;
+    string   key;
+    uint16_t alias_len;
+    string   alias;
+    uint16_t value_len;
+    string   value;
+public:
+    CPortalCustom()
+    {
+        key_len = 0;
+        alias_len = 0;
+        value_len = 0;
+    }
+    ~CPortalCustom(){}
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex);
+};
+
 class CVSPortalCustomConfTlv : public CElement
 {
 private:
     uint32_t count;
-    struct SPortalCustom
-    {
-        uint16_t key_len;
-        string   key;
-        uint16_t alias_len;
-        string   alias;
-        uint16_t value_len;
-        string   value;
-    };
-    vector<struct SPortalCustom> portal_customs;
+public:
+    vector<CPortalCustom> portal_customs;
 public:
     CVSPortalCustomConfTlv()
     {
@@ -978,6 +991,8 @@ public:
         count = 0;
     }
     ~CVSPortalCustomConfTlv(){}
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex);
 };
 
 class  CVSTimeStampConfTlv : public CElement
@@ -991,6 +1006,8 @@ public:
         time_stamp = 0;
     }
     ~CVSTimeStampConfTlv(){}
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex);
 };
 
 class CVSByPassConfTlv : public CElement
@@ -1004,6 +1021,8 @@ public:
         by_pass = 0;
     }
     ~CVSByPassConfTlv(){}
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex);
 };
 
 class CAccessControl

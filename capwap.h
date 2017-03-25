@@ -504,7 +504,7 @@ public:
     CLocalACAddrConfTlv local_ac_conf;
     CConnectionModeConfTlv connection_mode_conf;
     CRunningModeConfTlv running_mode_conf;
-    CStationDataCollectionConfTlv sta_data_collection_conf;
+    // CStationDataCollectionConfTlv sta_data_collection_conf; // 废弃，无线定位包含此功能
     CSpectrumAnalysisConfTlv spectrum_analysis_conf;
     CLanVlanConfTlv lan_vlan_conf;
     CAPReportStationInfoIntervalTlv report_station_interval;
@@ -513,7 +513,7 @@ public:
     CLanPortalConfTlv lan_portal_conf;
     CAddDstBlackConfTlv add_dst_black;
     CDelDstBlackConfTlv del_dst_black;
-    CVendorSpecPayLoad pay_load;
+    CVendorSpecPayLoadTlv pay_load;
 
 public:
     CCapwapAPConfReq()

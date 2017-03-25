@@ -531,6 +531,27 @@ int CCapwapEchoRsp::LoadFrom(kvlist &kv)
     return 0;
 }
 
+int CCapwapAPConfReq::Parse(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapAPConfReq::SaveTo(string &str)
+{
+    return 0;
+}
+int CCapwapAPConfReq::Assemble(CBuffer &buffer)
+{
+    CCapwapHeader::Assemble(buffer);
+
+
+    element_end = buffer.GetOffset();
+    ReAssembleCtrlHeader(buffer);
+    return 0;
+}
+int CCapwapAPConfReq::LoadFrom(kvlist &kv)
+{
+    return 0;
+}
 
 
 

@@ -52,7 +52,7 @@ string toString(uint16_t value)
     return ss.str();
 }
 
-uint8_t  toInt8(string value)
+uint8_t toInt8(string value)
 {
     stringstream ss;
     uint32_t ret = 0;
@@ -64,7 +64,7 @@ uint8_t  toInt8(string value)
 
 }
 
-uint16_t  toInt16(string value)
+uint16_t toInt16(string value)
 {
     stringstream ss;
     uint32_t ret = 0;
@@ -76,6 +76,10 @@ uint16_t  toInt16(string value)
 
 }
 
+uint32_t toInt32(string value)
+{
+    return toInt(value);
+}
 
 uint32_t toInt(string value)
 {

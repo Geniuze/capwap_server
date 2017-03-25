@@ -271,6 +271,7 @@ int CBusiness::business_configure_process(struct ap_dev *ap)
     prsp->pay_loads[0].echo_conf.setValid(true);
     prsp->pay_loads[0].traffic_statics_conf.setValid(true);
 
+    // TODO 数据库结构不应该在这里体现，需要单独的文件来存放，使用宏控制
     for (uint32_t i=0; i<radio_config.size(); i++)
     {
         int radio_id = i+1;
@@ -410,6 +411,34 @@ int CBusiness::business_init_ap_config(struct ap_dev* ap)
 {
     CCapwapAPConfReq *preq = NULL;
     CBuffer buffer;
+    vector<string> group_config;
+    DBResult result;
+    string cond;
+    kvlist kv;
+
+    cond.append(DB_STRING_GROUP_NAME"=(select "DB_STRING_GROUP_NAME \
+                " from "AP_LIST" where "DB_STRING_AP_MAC"='" + toString(ap->hw_addr));
+    DBI::Query(GROUP_LIST, "*", result, cond.c_str());
+    if (result.size() != 1)
+    {
+        dlog(LOG_ERR, "%s.%d AP %s GET GROUP ERROR.", __func__, __LINE__, ap->hw_addr);
+        return BUSINESS_FAIL;
+    }
+    group_config = result[0];
+
+    SetValue(kv, STRING_REPORT_STATION_INFO_ENABLE,
+             group_config[DB_INDEX_STATION_TRAFFIC_ENABLE]);
+    SetValue(kv, STRING_REPORT_STATION_INFO_INTERVAL,
+             group_config[DB_INDEX_STATION_TRAFFIC_INTERVAL]);
+    SetValue(kv, STRING_ROMING_CONFIG_ENABLE, group_config[DB_INDEX_STATION_ROMING_ENABLE]);
+    SetValue(kv, STRING_ROMING_CONFIG_SIGNAL, group_config[DB_INDEX_STATION_ROMING_SIGNAL]);
+    SetValue(kv, STRING_LOW_RSSI_REFUSE_ENABLE, group_config[DB_INDEX_LOW_SIGNAL_ENABLE]);
+    SetValue(kv, STRING_LOW_RSSI_THRESHOLD, group_config[DB_INDEX_LOW_SIGNAL_THRESHOLD]);
+    SetValue(kv, STRING_BY_PASS_ENABLE, group_config[DB_INDEX_BY_PASS_ENABLE]);
+    SetValue(kv, STRING_AP_LOADBALANCE_ENABLE, group_config[DB_INDEX_LOAD_BALANCE_ENABLE]);
+    SetValue(kv, STRING_AP_LOADBALANCE_INTERVAL, group_config[DB_INDEX_SCAN_INTERVAL]);
+    SetValue(kv, STRING_AP_LOADBALANCE_THRESHOLD, group_config[DB_INDEX_LOAD_BALANCE_THRESHOLD]);
+    SetValue(kv, STRING_LAN_VLAN_ID, group_config[DB_INDEX_VLAN_INTER_ID]);
 
     preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
     if (NULL == preq)
@@ -425,14 +454,18 @@ int CBusiness::business_init_ap_config(struct ap_dev* ap)
     preq->rate_set_conf.setValid(true);
     preq->low_rssi_conf.setValid(true);
     preq->connection_mode_conf.setValid(true);
-    preq->sta_data_collection_conf.setValid(true);
     preq->lan_vlan_conf.setValid(true);
     preq->report_station_interval.setValid(true);
     preq->audit_appri_conf.setValid(true);
     preq->lan_portal_conf.setValid(true);
     preq->pay_load.setValid(true);
     preq->pay_load.portal_custom.setValid(true);
+    // TODO 此处需知道定制的个数
+    // preq->pay_load.portal_custom.portal_customs.resize();
+    // 每个CPortalCustom置为true
     preq->pay_load.time_stamp.setValid(true);
+    preq->pay_load.by_pass.setValid(true);
 
+    SAFE_DELETE(preq);
     return BUSINESS_SUCCESS;
 }

@@ -47,6 +47,7 @@ int init_db(const char *file)
         DBI::exec(INIT_GROUP_LIST_TABLE, &err);
         DBI::exec(INIT_RADIO_2G_LIST_TABLE, &err);
         DBI::exec(INIT_RADIO_5G_LIST_TABLE, &err);
+        DBI::exec(INIT_WP_LIST_TABLE, &err);
         DBI::Close();
     }
     DBI::Open(file);
@@ -58,6 +59,7 @@ int init_db_data()
     DBI::Insert(GROUP_LIST, DB_STRING_GROUP_NAME, "'default'");
     DBI::Insert(RADIO_2G_LIST, DB_STRING_RADIO_2G_STRATEGY_NAME, "'default'");
     DBI::Insert(RADIO_5G_LIST, DB_STRING_RADIO_5G_STRATEGY_NAME, "'default'");
+    DBI::Insert(WP_LIST, DB_STRING_WIRELESS_POSITION_NAME, "'default'");
     return 0;
 }
 

@@ -586,3 +586,111 @@ int CVSChannelReuseConfTlv::LoadFrom(kvlist &kv, string ex)
 
     return 0;
 }
+
+int CPortalCustom::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    // Assemble(buffer); //此消息不是消息元，不可组装头部信息
+    buffer.store16(key_len);
+    buffer.storerawbytes((uint8_t*)key.c_str(), key_len);
+    buffer.store16(alias_len);
+    buffer.storerawbytes((uint8_t*)alias.c_str(), alias_len);
+    buffer.store16(value_len);
+    buffer.storerawbytes((uint8_t*)value.c_str(), value_len);
+
+    return 0;
+}
+int CPortalCustom::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    key_len = toInt16(GetValue(kv, STRING_PORTAL_CUSTOM_KEY_LEN + ex));
+    key = GetValue(kv, STRING_PORTAL_CUSTOM_KEY + ex);
+    alias_len = toInt16(GetValue(kv, STRING_PORTAL_CUSTOM_ALIAS_LEN + ex));
+    alias = GetValue(kv, STRING_PORTAL_CUSTOM_ALIAS + ex);
+    value_len = toInt16(GetValue(kv, STRING_PORTAL_CUSTOM_VALUE_LEN + ex));
+    value = GetValue(kv, STRING_PORTAL_CUSTOM_VALUE + ex);
+
+    _elength += 6 + key_len + alias_len + value_len;
+
+    return 0;
+}
+
+int CVSPortalCustomConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(count);
+
+    for (size_t i=0; i<portal_customs.size(); i++)
+    {
+        portal_customs[i].Assemble(buffer);
+    }
+
+    return 0;
+}
+int CVSPortalCustomConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    count = toInt(GetValue(kv, STRING_PORTAL_CUSTOM_COUNT));
+    _elength += 4;
+
+    for (size_t i=0; i<portal_customs.size(); i++)
+    {
+        portal_customs[i].LoadFrom(kv, toString(i+1));
+        _elength += portal_customs[i].length();
+    }
+
+    return 0;
+}
+
+int CVSTimeStampConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(time_stamp);
+
+    return 0;
+}
+int CVSTimeStampConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    time_stamp = toInt(GetValue(kv, STRING_TIME_STAMP));
+
+    return 0;
+}
+
+int CVSByPassConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    Assemble(buffer);
+
+    buffer.store8(by_pass);
+
+    return 0;
+}
+int CVSByPassConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    by_pass = toInt8(GetValue(kv, STRING_BY_PASS_ENABLE));
+    _elength = 1;
+
+    return 0;
+}
