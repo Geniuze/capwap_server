@@ -176,15 +176,14 @@ int ap_dev_set_radios(struct ap_dev *ap, kvlist &kv)
 {
     for (int i=0; i<MAX_RADIOS; ++i)
     {
-        // 此处有坑，下标为0存放的是radio id为1的射频信息
-        int radio_id = i+1;
-
-        if (IsSet(kv, STRING_RADIO_ID + toString(radio_id)))
+        // 注意：下标并不是radio_id,radio_id一般从1开始
+        if (IsSet(kv, STRING_RADIO_ID + toString(i)))
         {
-            string s_radio_type_11a = GetValue(kv, STRING_RADIO_TYPE_11A + toString(radio_id));
-            string s_radio_type_11b = GetValue(kv, STRING_RADIO_TYPE_11B + toString(radio_id));
-            string s_radio_type_11g = GetValue(kv, STRING_RADIO_TYPE_11G + toString(radio_id));
-            string s_radio_type_11n = GetValue(kv, STRING_RADIO_TYPE_11N + toString(radio_id));
+            int radio_id = toInt(GetValue(kv, STRING_RADIO_ID + toString(i)));
+            string s_radio_type_11a = GetValue(kv, STRING_RADIO_TYPE_11A + toString(i));
+            string s_radio_type_11b = GetValue(kv, STRING_RADIO_TYPE_11B + toString(i));
+            string s_radio_type_11g = GetValue(kv, STRING_RADIO_TYPE_11G + toString(i));
+            string s_radio_type_11n = GetValue(kv, STRING_RADIO_TYPE_11N + toString(i));
 
             ap->max_radios = radio_id;
             ap->radios[i].radio_id = radio_id;
@@ -237,4 +236,9 @@ int ap_list_run_count()
 int ap_list_all_count()
 {
     return aps.size();
+}
+
+bool isOnline(struct ap_dev *ap)
+{
+    return ap && (CAPWAP_STATE_RUN == ap->state);
 }

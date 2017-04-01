@@ -62,7 +62,7 @@ int CCapwapProtoHeader::Assemble(CBuffer &buffer)
 }
 int CCapwapCtrlHeader::Parse(CBuffer &buffer)
 {
-    buffer.retrive32(u_message_type.message_type);
+    buffer.retrive32(message_type);
     buffer.retrive8(sequence_num);
     buffer.retrive16(message_element_length);
     buffer.retrive8(flags);
@@ -77,7 +77,7 @@ int CCapwapCtrlHeader::Parse(CBuffer &buffer)
 }
 int CCapwapCtrlHeader::Assemble(CBuffer &buffer)
 {
-    buffer.store32(u_message_type.message_type);
+    buffer.store32(message_type);
     buffer.store8(sequence_num);
     buffer.store16(message_element_length);
     buffer.store8(flags);
@@ -196,10 +196,9 @@ int CCapwapJoinReq::Parse(CBuffer &buffer)
 }
 int CCapwapJoinReq::SaveTo(string &str)
 {
-    vector<CWTPRadioInfoTlv>::iterator it = radios.end();
-    for (it = radios.begin(); it != radios.end(); it++)
+    for (size_t i = 0; i<radios.size(); i++)
     {
-        it->SaveTo(str);
+        radios[i].SaveTo(str, toString(i));
     }
 
     board_data.SaveTo(str);
@@ -257,8 +256,6 @@ int CCapwapConfigureStatusReq::Parse(CBuffer &buffer)
         CTxPowerTlv tx_power;
         CDSCtrlTlv ds_ctrl;
 
-        dlog(LOG_DEBUG, "radio_conf.valid = %s", radio_conf.isValid()?"true":"false");
-
         radio_conf.Parse(buffer);
         if (radio_conf.isValid())
             radio_confs.push_back(radio_conf);
@@ -292,13 +289,13 @@ int CCapwapConfigureStatusReq::SaveTo(string &str)
     size_t i = 0;
 
     for (i = 0; i<radio_confs.size(); i++)
-        radio_confs[i].SaveTo(str);
+        radio_confs[i].SaveTo(str, toString(i));
     for (i = 0; i<radio_infos.size(); i++)
-        radio_infos[i].SaveTo(str);
+        radio_infos[i].SaveTo(str, toString(i));
     for (i = 0; i<tx_powers.size(); i++)
-        tx_powers[i].SaveTo(str);
+        tx_powers[i].SaveTo(str, toString(i));
     for (i = 0; i<ds_ctrls.size(); i++)
-        ds_ctrls[i].SaveTo(str);
+        ds_ctrls[i].SaveTo(str, toString(i));
 
     pay_load.SaveTo(str);
 
@@ -346,35 +343,35 @@ int CCapwapConfigureStatusRsp::LoadFrom(kvlist &kv)
     size_t i;
     for (i=0; i<radio_admin_states.size(); i++)
     {
-        radio_admin_states[i].LoadFrom(kv, toString(i+1));
+        radio_admin_states[i].LoadFrom(kv, toString(i));
     }
     for (i=0; i<radio_confs.size(); i++)
     {
-        radio_confs[i].LoadFrom(kv, toString(i+1));
+        radio_confs[i].LoadFrom(kv, toString(i));
     }
     for (i=0; i<radio_infos.size(); i++)
     {
-        radio_infos[i].LoadFrom(kv, toString(i+1));
+        radio_infos[i].LoadFrom(kv, toString(i));
     }
     for (i=0; i<mac_operations.size(); i++)
     {
-        mac_operations[i].LoadFrom(kv, toString(i+1));
+        mac_operations[i].LoadFrom(kv, toString(i));
     }
     for (i=0; i<tx_powers.size(); i++)
     {
-        tx_powers[i].LoadFrom(kv, toString(i+1));
+        tx_powers[i].LoadFrom(kv, toString(i));
     }
     for (i=0; i<ds_ctrls.size(); i++)
     {
-        ds_ctrls[i].LoadFrom(kv, toString(i+1));
+        ds_ctrls[i].LoadFrom(kv, toString(i));
     }
     for (i=0; i<ofdm_ctrls.size(); i++)
     {
-        ofdm_ctrls[i].LoadFrom(kv, toString(i+1));
+        ofdm_ctrls[i].LoadFrom(kv, toString(i));
     }
     for (i=0; i<pay_loads.size(); i++)
     {
-        pay_loads[i].LoadFrom(kv, toString(i+1));
+        pay_loads[i].LoadFrom(kv, toString(i));
     }
 
     return 0;
@@ -401,7 +398,7 @@ int CCapwapChangeStateReq::SaveTo(string &str)
 {
     for (size_t i=0; i<radio_operation_states.size(); i++)
     {
-        radio_operation_states[i].SaveTo(str);
+        radio_operation_states[i].SaveTo(str, toString(i));
     }
     result.SaveTo(str);
     pay_load.SaveTo(str);
@@ -543,6 +540,30 @@ int CCapwapAPConfReq::Assemble(CBuffer &buffer)
 {
     CCapwapHeader::Assemble(buffer);
 
+    // outside_auth_conf.Assemble(buffer);
+    // add_dst_white.Assemble(buffer);
+    // del_dst_white.Assemble(buffer);
+    // nat_dhcp_conf.Assemble(buffer);
+    report_station_enable.Assemble(buffer);
+    roming_conf.Assemble(buffer);
+    wp_conf.Assemble(buffer);
+    rfg_conf.Assemble(buffer);
+    ap_lb_conf.Assemble(buffer);
+    rate_set_conf.Assemble(buffer);
+    low_rssi_conf.Assemble(buffer);
+    // cloud_ac_conf.Assemble(buffer);
+    // local_ac_conf.Assemble(buffer);
+    // connection_mode_conf.Assemble(buffer);
+    // running_mode_conf.Assemble(buffer);
+    // spectrum_analysis_conf.Assemble(buffer);
+    lan_vlan_conf.Assemble(buffer);
+    report_station_interval.Assemble(buffer);
+    // ap_password_conf.Assemble(buffer);
+    audit_appri_conf.Assemble(buffer);
+    lan_portal_conf.Assemble(buffer);
+    // add_dst_black.Assemble(buffer);
+    // del_dst_black.Assemble(buffer);
+    pay_load.Assemble(buffer);
 
     element_end = buffer.GetOffset();
     ReAssembleCtrlHeader(buffer);
@@ -550,6 +571,338 @@ int CCapwapAPConfReq::Assemble(CBuffer &buffer)
 }
 int CCapwapAPConfReq::LoadFrom(kvlist &kv)
 {
+    // outside_auth_conf.LoadFrom(kv);
+    // add_dst_white.LoadFrom(kv);
+    // del_dst_white.LoadFrom(kv);
+    // nat_dhcp_conf.LoadFrom(kv);
+    report_station_enable.LoadFrom(kv);
+    roming_conf.LoadFrom(kv);
+    wp_conf.LoadFrom(kv);
+    rfg_conf.LoadFrom(kv);
+    ap_lb_conf.LoadFrom(kv);
+    rate_set_conf.LoadFrom(kv);
+    low_rssi_conf.LoadFrom(kv);
+    // cloud_ac_conf.LoadFrom(kv);
+    // local_ac_conf.LoadFrom(kv);
+    // connection_mode_conf.LoadFrom(kv);
+    // running_mode_conf.LoadFrom(kv);
+    // spectrum_analysis_conf.LoadFrom(kv);
+    lan_vlan_conf.LoadFrom(kv);
+    report_station_interval.LoadFrom(kv);
+    // ap_password_conf.LoadFrom(kv);
+    audit_appri_conf.LoadFrom(kv);
+    lan_portal_conf.LoadFrom(kv);
+    // add_dst_black.LoadFrom(kv);
+    // del_dst_black.LoadFrom(kv);
+    pay_load.LoadFrom(kv);
+
+    return 0;
+}
+
+int CCapwapWlanConfigReq::Parse(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapWlanConfigReq::SaveTo(string &str)
+{
+    return 0;
+}
+int CCapwapWlanConfigReq::Assemble(CBuffer &buffer)
+{
+    CCapwapHeader::Assemble(buffer);
+    for (size_t i=0; i<add_wlans.size(); i++)
+    {
+        add_wlans[i].Assemble(buffer);
+        pay_loads[i].Assemble(buffer);
+    }
+
+    element_end = buffer.GetOffset();
+    ReAssembleCtrlHeader(buffer);
+    return 0;
+}
+int CCapwapWlanConfigReq::LoadFrom(kvlist &kv)
+{
+    for (size_t i=0; i<add_wlans.size(); i++)
+    {
+        add_wlans[i].LoadFrom(kv, toString(i));
+        pay_loads[i].LoadFrom(kv, toString(i));
+    }
+
+    return 0;
+}
+int CCapwapWlanConfigRsp::Parse(CBuffer &buffer)
+{
+    CCapwapHeader::Parse(buffer);
+
+    result.Parse(buffer);
+    pay_load.Parse(buffer);
+
+    return 0;
+}
+int CCapwapWlanConfigRsp::SaveTo(string &str)
+{
+    result.SaveTo(str);
+    pay_load.SaveTo(str);
+
+    return 0;
+}
+
+int CCapwapWlanConfigRsp::Assemble(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapWlanConfigRsp::LoadFrom(kvlist &kv)
+{
+    return 0;
+}
+
+int CCapwapAPConfRsp::Parse(CBuffer &buffer)
+{
+    CCapwapHeader::Parse(buffer);
+
+    result.Parse(buffer);
+    pay_load.Parse(buffer);
+
+    return 0;
+}
+int CCapwapAPConfRsp::SaveTo(string &str)
+{
+    result.SaveTo(str);
+    pay_load.SaveTo(str);
+
+    return 0;
+}
+int CCapwapAPConfRsp::Assemble(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapAPConfRsp::LoadFrom(kvlist &kv)
+{
+    return 0;
+}
+
+int CCapwapWTPEventReq::Parse(CBuffer &buffer)
+{
+    CCapwapHeader::Parse(buffer);
+
+    add_station.Parse(buffer);
+    del_station.Parse(buffer);
+    ds_ctrl.Parse(buffer);
+
+    pay_load.Parse(buffer);
+
+    return 0;
+}
+int CCapwapWTPEventReq::SaveTo(string &str)
+{
+    add_station.SaveTo(str);
+    del_station.SaveTo(str);
+    ds_ctrl.SaveTo(str);
+    pay_load.SaveTo(str);
+
+    return 0;
+}
+int CCapwapWTPEventReq::Assemble(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapWTPEventReq::LoadFrom(kvlist &kv)
+{
+    return 0;
+}
+
+int CCapwapWTPEventRsp::Parse(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapWTPEventRsp::SaveTo(string &str)
+{
+    return 0;
+}
+int CCapwapWTPEventRsp::Assemble(CBuffer &buffer)
+{
+    CCapwapHeader::Assemble(buffer);
+
+    return 0;
+}
+int CCapwapWTPEventRsp::LoadFrom(kvlist &kv)
+{
+    return 0;
+}
+
+int CCapwapAPInfoReq::Parse(CBuffer &buffer)
+{
+    CCapwapHeader::Parse(buffer);
+
+    conf_info.Parse(buffer);
+    conf_info_all.Parse(buffer);
+
+    pay_load.Parse(buffer);
+
+    return 0;
+}
+int CCapwapAPInfoReq::SaveTo(string &str)
+{
+    conf_info.SaveTo(str, "");
+    conf_info_all.SaveTo(str, "");
+
+    pay_load.SaveTo(str, "");
+
+    return 0;
+}
+int CCapwapAPInfoReq::Assemble(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapAPInfoReq::LoadFrom(kvlist &kv)
+{
+    return 0;
+}
+
+int CCapwapAPInfoRsp::Parse(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapAPInfoRsp::SaveTo(string &str)
+{
+    return 0;
+}
+int CCapwapAPInfoRsp::Assemble(CBuffer &buffer)
+{
+    CCapwapHeader::Assemble(buffer);
+
+    result.Assemble(buffer);
+
+    element_end = buffer.GetOffset();
+    ReAssembleCtrlHeader(buffer);
+
+    return 0;
+}
+int CCapwapAPInfoRsp::LoadFrom(kvlist &kv)
+{
+    result.LoadFrom(kv, "");
+
+    return 0;
+}
+
+int CCapwapConfigUpdateReq::Parse(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapConfigUpdateReq::SaveTo(string &str)
+{
+    return 0;
+}
+int CCapwapConfigUpdateReq::Assemble(CBuffer &buffer)
+{
+    size_t i = 0;
+    CCapwapHeader::Assemble(buffer);
+
+    ac_time_stamp.Assemble(buffer);
+    for (i=0; i<radio_admin_states.size(); i++)
+    {
+        radio_admin_states[i].Assemble(buffer);
+    }
+    for (i=0; i<radio_confs.size(); i++)
+    {
+        radio_confs[i].Assemble(buffer);
+    }
+    for (i=0; i<mac_operations.size(); i++)
+    {
+        mac_operations[i].Assemble(buffer);
+    }
+    for (i=0; i<radio_infos.size(); i++)
+    {
+        radio_infos[i].Assemble(buffer);
+    }
+    for (i=0; i<tx_powers.size(); i++)
+    {
+        tx_powers[i].Assemble(buffer);
+    }
+    for (i=0; i<ds_ctrls.size(); i++)
+    {
+        ds_ctrls[i].Assemble(buffer);
+    }
+    for (i=0; i<ofdm_ctrls.size(); i++)
+    {
+        ofdm_ctrls[i].Assemble(buffer);
+    }
+    for (i=0; i<pay_loads.size(); i++)
+    {
+        pay_loads[i].Assemble(buffer);
+    }
+    image_identifier.Assemble(buffer);
+    auto_channel_select.Assemble(buffer);
+
+    element_end = buffer.GetOffset();
+    ReAssembleCtrlHeader(buffer);
+
+    return 0;
+}
+int CCapwapConfigUpdateReq::LoadFrom(kvlist &kv)
+{
+    size_t i;
+    ac_time_stamp.LoadFrom(kv, "");
+    for (i=0; i<radio_admin_states.size(); i++)
+    {
+        radio_admin_states[i].LoadFrom(kv, toString(i));
+    }
+    for (i=0; i<radio_confs.size(); i++)
+    {
+        radio_confs[i].LoadFrom(kv, toString(i));
+    }
+    for (i=0; i<mac_operations.size(); i++)
+    {
+        mac_operations[i].LoadFrom(kv, toString(i));
+    }
+    for (i=0; i<radio_infos.size(); i++)
+    {
+        radio_infos[i].LoadFrom(kv, toString(i));
+    }
+    for (i=0; i<tx_powers.size(); i++)
+    {
+        tx_powers[i].LoadFrom(kv, toString(i));
+    }
+    for (i=0; i<ds_ctrls.size(); i++)
+    {
+        ds_ctrls[i].LoadFrom(kv, toString(i));
+    }
+    for (i=0; i<ofdm_ctrls.size(); i++)
+    {
+        ofdm_ctrls[i].LoadFrom(kv, toString(i));
+    }
+    for (i=0; i<pay_loads.size(); i++)
+    {
+        pay_loads[i].LoadFrom(kv, toString(i));
+    }
+    image_identifier.LoadFrom(kv, toString(i));
+    auto_channel_select.LoadFrom(kv, toString(i));
+
+    return 0;
+}
+
+int CCapwapConfigUpdateRsp::Parse(CBuffer &buffer)
+{
+    CCapwapHeader::Parse(buffer);
+
+    result.Parse(buffer);
+    pay_load.Parse(buffer);
+
+    return 0;
+}
+int CCapwapConfigUpdateRsp::SaveTo(string &str)
+{
+    result.SaveTo(str, "");
+    pay_load.SaveTo(str, "");
+
+    return 0;
+}
+int CCapwapConfigUpdateRsp::Assemble(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapConfigUpdateRsp::LoadFrom(kvlist &kv)
+{
     return 0;
 }
 
@@ -560,9 +913,9 @@ int CCapwapAPConfReq::LoadFrom(kvlist &kv)
 
 
 
-int capwap_packet_type(CCapwapHeader *cwheader)
+uint32_t capwap_packet_type(CCapwapHeader *cwheader)
 {
-    return cwheader->ctrlHeader.GetPacketType();
+    return cwheader->getMessageType();
 }
 
 CCapwapHeader * capwap_get_packet(int packet_type)
@@ -594,6 +947,26 @@ CCapwapHeader * capwap_get_packet(int packet_type)
             return new CCapwapEchoReq;
         case CAPWAP_PACKET_TYPE_ECHO_RSP:
             return new CCapwapEchoRsp;
+        case CAPWAP_PACKET_TYPE_AP_CONFIG_REQ:
+            return new CCapwapAPConfReq;
+        case CAPWAP_PACKET_TYPE_AP_CONFIG_RSP:
+            return new CCapwapAPConfRsp;
+        case CAPWAP_PACKET_TYPE_WLAN_CONFIG_REQ:
+            return new CCapwapWlanConfigReq;
+        case CAPWAP_PACKET_TYPE_WLAN_CONFIG_RSP:
+            return new CCapwapWlanConfigRsp;
+        case CAPWAP_PACKET_TYPE_WTP_EVENT_REQ:
+            return new CCapwapWTPEventReq;
+        case CAPWAP_PACKET_TYPE_WTP_EVENT_RSP:
+            return new CCapwapWTPEventRsp;
+        case CAPWAP_PACKET_TYPE_AP_INFO_REQ:
+            return new CCapwapAPInfoReq;
+        case CAPWAP_PACKET_TYPE_AP_INFO_RSP:
+            return new CCapwapAPInfoRsp;
+        case CAPWAP_PACKET_TYPE_CONFIG_UPDATE_REQ:
+            return new CCapwapConfigUpdateReq;
+        case CAPWAP_PACKET_TYPE_CONFIG_UPDATE_RSP:
+            return new CCapwapConfigUpdateRsp;
         default:
             dlog(LOG_ERR, "%s.%d Unknown this TYPE %d", __FILE__, __LINE__, packet_type);
             break;
@@ -604,3 +977,4 @@ CCapwapHeader * capwap_get_packet(int packet_type)
     }
     return NULL;
 }
+

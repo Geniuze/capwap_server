@@ -174,7 +174,7 @@ class CCapwapCtrlHeader : public CCapwapUtil {
 public:
     CCapwapCtrlHeader()
     {
-        u_message_type.message_type = 0;
+        message_type = 0;
         sequence_num = 0;
         message_element_length = 0;
         flags = 0;
@@ -183,37 +183,28 @@ public:
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
 
-    void setMessageType(int type)
+    void setMessageType(uint32_t type)
     {
-        u_message_type.s.enterprise_specific = type;
+        message_type = type;
+    }
+    uint32_t getMessageType()
+    {
+        return message_type;
+    }
+    void setSequenceNum(uint8_t seq)
+    {
+        sequence_num = seq;
+    }
+    uint8_t getSequenceNum()
+    {
+        return sequence_num;
     }
     void setElementsLength(int length)
     {
         message_element_length = length;
     }
-    int GetPacketType()
-    {
-        return u_message_type.s.enterprise_specific;
-    }
 private:
-#ifdef __mips32__
-    union {
-        uint32_t message_type;
-        struct {
-            uint32_t enterprise_num : 24;
-            uint32_t enterprise_specific : 8;
-        }s;
-    }u_message_type;
-#else
-    union {
-        uint32_t message_type;
-        struct {
-            uint32_t enterprise_specific : 8;
-            uint32_t enterprise_num : 24;
-        }s;
-    }u_message_type;
-#endif
-
+    uint32_t message_type;
     uint8_t sequence_num;
     uint16_t message_element_length;
     uint8_t flags;
@@ -251,6 +242,18 @@ public:
     void setMessageType(int type)
     {
         ctrlHeader.setMessageType(type);
+    }
+    uint32_t getMessageType()
+    {
+        return ctrlHeader.getMessageType();
+    }
+    void setSequenceNum(uint8_t seq)
+    {
+        ctrlHeader.setSequenceNum(seq);
+    }
+    uint8_t getSequenceNum()
+    {
+        return ctrlHeader.getSequenceNum();
     }
     void ReAssembleCtrlHeader(CBuffer &buffer)
     {
@@ -531,6 +534,7 @@ public:
 class CCapwapAPConfRsp : public CCapwapHeader {
 public:
     CResultTlv result;
+    CVendorSpecPayLoadTlv pay_load;
 public:
     CCapwapAPConfRsp()
     {
@@ -548,6 +552,7 @@ class CCapwapAPInfoReq : public CCapwapHeader {
 public:
     CConfInfoTlv conf_info;
     CConfInfoAllTlv conf_info_all;
+    CVendorSpecPayLoadTlv pay_load;
 public:
     CCapwapAPInfoReq()
     {
@@ -624,18 +629,18 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CWTPEventReq : public CCapwapHeader {
+class CCapwapWTPEventReq : public CCapwapHeader {
 public:
     CAddStationTlv add_station;
     CDelStationTlv del_station;
     CDSCtrlTlv ds_ctrl;
     CVendorSpecPayLoadTlv pay_load;
 public:
-    CWTPEventReq()
+    CCapwapWTPEventReq()
     {
         setMessageType(CAPWAP_PACKET_TYPE_WTP_EVENT_REQ);
     }
-    ~CWTPEventReq(){}
+    ~CCapwapWTPEventReq(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -643,15 +648,15 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CWTPEventRsp : public CCapwapHeader {
+class CCapwapWTPEventRsp : public CCapwapHeader {
 public:
     CVendorSpecPayLoadTlv pay_load;
 public:
-    CWTPEventRsp()
+    CCapwapWTPEventRsp()
     {
         setMessageType(CAPWAP_PACKET_TYPE_WTP_EVENT_RSP);
     }
-    ~CWTPEventRsp(){}
+    ~CCapwapWTPEventRsp(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -659,13 +664,13 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CResetReq : public CCapwapHeader {
+class CCapwapResetReq : public CCapwapHeader {
 public:
-    CResetReq()
+    CCapwapResetReq()
     {
         setMessageType(CAPWAP_PACKET_TYPE_RESET_REQ);
     }
-    ~CResetReq(){}
+    ~CCapwapResetReq(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -673,15 +678,15 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CResetRsp : public CCapwapHeader {
+class CCapwapResetRsp : public CCapwapHeader {
 public:
     CVendorSpecPayLoadTlv pay_load;
 public:
-    CResetRsp()
+    CCapwapResetRsp()
     {
         setMessageType(CAPWAP_PACKET_TYPE_RESET_RSP);
     }
-    ~CResetRsp(){}
+    ~CCapwapResetRsp(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -689,17 +694,17 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CStationConfigReq : public CCapwapHeader {
+class CCapwapStationConfigReq : public CCapwapHeader {
 public:
     CAddStationTlv add_station;
     CDelStationTlv del_station;
     CVendorSpecPayLoadTlv pay_load;
 public:
-    CStationConfigReq()
+    CCapwapStationConfigReq()
     {
         setMessageType(CAPWAP_PACKET_TYPE_STATION_CONFIG_REQ);
     }
-    ~CStationConfigReq(){}
+    ~CCapwapStationConfigReq(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -707,16 +712,16 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CStationConfigRsp : public CCapwapHeader {
+class CCapwapStationConfigRsp : public CCapwapHeader {
 public:
     CResultTlv result;
     CVendorSpecPayLoadTlv pay_load;
 public:
-    CStationConfigRsp()
+    CCapwapStationConfigRsp()
     {
         setMessageType(CAPWAP_PACKET_TYPE_STATION_CONFIG_RSP);
     }
-    ~CStationConfigRsp(){}
+    ~CCapwapStationConfigRsp(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -724,19 +729,19 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CWlanConfigReq : public CCapwapHeader {
+class CCapwapWlanConfigReq : public CCapwapHeader {
 public:
     vector<CAddWlanTlv> add_wlans;
     vector<CDelWlanTlv> del_wlans;
     vector<CUpdateWlanTlv> update_wlans;
-    vector<C80211InfomationTlv> infos;
+    vector<C80211InfomationTlv> infos; // not use
     vector<CVendorSpecPayLoadTlv> pay_loads;
 public:
-    CWlanConfigReq()
+    CCapwapWlanConfigReq()
     {
         setMessageType(CAPWAP_PACKET_TYPE_WLAN_CONFIG_REQ);
     }
-    ~CWlanConfigReq(){}
+    ~CCapwapWlanConfigReq(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -744,16 +749,16 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CWlanConfigRsp : public CCapwapHeader {
+class CCapwapWlanConfigRsp : public CCapwapHeader {
 public:
     CResultTlv result;
     CVendorSpecPayLoadTlv pay_load;
 public:
-    CWlanConfigRsp()
+    CCapwapWlanConfigRsp()
     {
         setMessageType(CAPWAP_PACKET_TYPE_WLAN_CONFIG_RSP);
     }
-    ~CWlanConfigRsp(){}
+    ~CCapwapWlanConfigRsp(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -761,7 +766,7 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CImageDataReq : public CCapwapHeader {
+class CCapwapImageDataReq : public CCapwapHeader {
 public:
     // AP ----> AC
     CImageIdentifierTlv image_identifier;
@@ -772,11 +777,11 @@ public:
     CImageDataTlv image_data;
     CImageInfoTlv image_info;
 public:
-    CImageDataReq()
+    CCapwapImageDataReq()
     {
         setMessageType(CAPWAP_PACKET_TYPE_IMAGE_DATA_REQ);
     }
-    ~CImageDataReq(){}
+    ~CCapwapImageDataReq(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -784,7 +789,7 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CImageDataRsp : public CCapwapHeader{
+class CCapwapImageDataRsp : public CCapwapHeader{
 public:
     // AC ---> AP
     CImageInfoTlv image_info;
@@ -795,11 +800,11 @@ public:
     // ALL
     CVendorSpecPayLoadTlv pay_load;
 public:
-    CImageDataRsp()
+    CCapwapImageDataRsp()
     {
         setMessageType(CAPWAP_PACKET_TYPE_IMAGE_DATA_RSP);
     }
-    ~CImageDataRsp(){}
+    ~CCapwapImageDataRsp(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -807,13 +812,13 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CClearConfigReq : public CCapwapHeader {
+class CCapwapClearConfigReq : public CCapwapHeader {
 public:
-    CClearConfigReq()
+    CCapwapClearConfigReq()
     {
         setMessageType(CAPWAP_PACKET_TYPE_CLEAR_CONFIG_REQ);
     }
-    ~CClearConfigReq(){}
+    ~CCapwapClearConfigReq(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -821,13 +826,13 @@ public:
     int LoadFrom(kvlist &kv);
 };
 
-class CClearConfigRsp : public CCapwapHeader {
+class CCapwapClearConfigRsp : public CCapwapHeader {
 public:
-    CClearConfigRsp()
+    CCapwapClearConfigRsp()
     {
         setMessageType(CAPWAP_PACKET_TYPE_CLEAR_CONFIG_RSP);
     }
-    ~CClearConfigRsp(){}
+    ~CCapwapClearConfigRsp(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
@@ -841,7 +846,7 @@ public:
 
 
 
-int capwap_packet_type(CCapwapHeader *cwheader);
+uint32_t capwap_packet_type(CCapwapHeader *cwheader);
 CCapwapHeader * capwap_get_packet(int packet_type);
 
 

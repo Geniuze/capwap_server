@@ -108,16 +108,14 @@ public:
             _buffer = (uint8_t *)malloc(len);
             if (NULL == _buffer)
             {
-                dlog(LOG_ERR, "%s.%d malloc error %s", __func__, __LINE__, strerror(errno));
+                dlog(LOG_ERR, "%s.%d malloc error %s len %d",
+                     __func__, __LINE__, strerror(errno), len);
                 return 1;
             }
             memcpy(_buffer, buf, len);
 
             _length = len;
             _size = len;
-            //_offset = 0;
-
-            dlog(LOG_DEBUG, "%s.%d bufferptr %#x len %d offset %d ", __func__, __LINE__, (int)_buffer, _length, _offset);
         }
         else
         {

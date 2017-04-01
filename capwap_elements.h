@@ -122,7 +122,7 @@ public:
     ~CWTPBoardDataTlv(){}
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 
 private:
@@ -145,7 +145,7 @@ public:
     ~CVendorSpecPayLoadTlv(){}
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 private:
     uint32_t vendor_identifier;
@@ -154,6 +154,7 @@ public:
     // AC ---> AP
     CAPTransConfTlv ap_trans;
     CVSRadioConfTlv radio_conf;
+    CVSVlanConfTlv vlan_conf;
     CVSAPSpaceInfoTlv ap_space_info;
     CVSABPRadioConfTlv abp_radio_conf;
     CVSRadioProbeConfTlv radio_probe_conf;
@@ -228,7 +229,7 @@ public:
     ~CACNameTlv(){}
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -248,7 +249,7 @@ public:
     ~CCtrlIpv4AddressTlv(){}
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -290,7 +291,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -337,7 +338,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -355,7 +356,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -386,7 +387,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -408,7 +409,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 class CDSCtrlTlv : public CElement
@@ -433,7 +434,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -454,7 +455,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -486,7 +487,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 
 };
@@ -515,7 +516,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -534,7 +535,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -557,7 +558,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -592,7 +593,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -612,7 +613,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -631,7 +632,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -666,7 +667,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -684,7 +685,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -704,7 +705,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -764,7 +765,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -790,7 +791,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -812,7 +813,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -831,20 +832,27 @@ public:
     CRateSetConfTlv()
     {
         set_element_type(ELEMENT_WIRELESS_RATE_SET);
-        radio_type_11a_len = 0;
         bzero(radio_type_11a_rate, sizeof(radio_type_11a_rate));
-        radio_type_11bg_len = 0;
         bzero(radio_type_11bg_rate, sizeof(radio_type_11bg_rate));
-        radio_type_11n_len = 0;
         bzero(radio_type_11n_rate, sizeof(radio_type_11n_rate));
-        radio_type_11ac_len = 0;
         bzero(radio_type_11ac_rate, sizeof(radio_type_11ac_rate));
+
+        // 速率集因为没有开关选项，需要初始化为全部速率启用
+        radio_type_11a_len = 1;
+        radio_type_11a_rate[0] = 0xff;
+        radio_type_11bg_len = 2;
+        radio_type_11bg_rate[0] = 0xff;
+        radio_type_11bg_rate[1] = 0xf0;
+        radio_type_11n_len = 3;
+        radio_type_11n_rate[0] = 0xff;
+        radio_type_11n_rate[0] = 0xff;
+        radio_type_11ac_len = 0;
     }
     ~CRateSetConfTlv(){}
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -864,7 +872,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -883,7 +891,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -902,7 +910,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -920,7 +928,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -938,7 +946,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -963,7 +971,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -985,7 +993,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1003,7 +1011,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1021,7 +1029,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1043,7 +1051,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1067,7 +1075,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1092,7 +1100,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1112,7 +1120,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1132,7 +1140,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1149,9 +1157,10 @@ public:
         len = 0;
     }
     ~CConfInfoEntry(){}
+
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 class CConfInfoTlv : public CElement
@@ -1170,7 +1179,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1193,7 +1202,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1211,7 +1220,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1238,7 +1247,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1258,7 +1267,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1269,7 +1278,7 @@ private:
     uint8_t  mac_len;
     uint8_t  mac[6];
     uint32_t vlan_id;
-    uint32_t wlan_id;
+    uint8_t wlan_id;
     uint8_t  ssid_len;
     string   ssid;
 public:
@@ -1287,7 +1296,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1297,7 +1306,7 @@ private:
     uint8_t  radio_id;
     uint8_t  mac_len;
     uint8_t  mac[6];
-    uint32_t wlan_id;
+    uint8_t wlan_id;
 public:
     CDelStationTlv()
     {
@@ -1311,7 +1320,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1320,7 +1329,25 @@ class CAddWlanTlv : public CElement
 private:
     uint8_t	 radio_id;
 	uint8_t	 wlan_id;
-    uint16_t capability;
+#ifdef __mips32__
+    union{
+        uint16_t capability;
+        struct{
+            uint16_t reserved1:6;
+            uint16_t qos_enable:1;
+            uint16_t reserved2:9;
+        }s;
+    }u_capability;
+#else
+    union{
+        uint16_t capability;
+        struct{
+            uint16_t reserved2:9;
+            uint16_t qos_enable:1;
+            uint16_t reserved1:6;
+        }s;
+    }u_capability;
+#endif
     uint8_t	 key_index;
 	uint8_t	 key_status;
 	uint16_t key_len;
@@ -1328,10 +1355,10 @@ private:
 	uint32_t group_tsc32; // not use
 	uint16_t group_tsc16; // not use
 	uint8_t	 qos;         // not use
-	uint8_t	 auth_type;
+	uint8_t	 auth_type;   // 1--wep  2--wpa-psk 3--wpa2-psk 4--wpa-eap 5--wpa2-eap 0--open
 	uint8_t	 mac_mode;    // not use
-	uint8_t	 tunnel_mode; // not use
-	uint8_t	 hide_ssid;
+	uint8_t	 tunnel_mode; // 0---central  1--local
+	uint8_t	 hide_ssid;   // 0---hide 1--not hide
 	string	 ssid;
 
 public:
@@ -1340,7 +1367,7 @@ public:
         set_element_type(ELEMENT_ADD_WLAN);
         radio_id = 0;
         wlan_id = 0;
-        capability = 0;
+        u_capability.capability = 0;
         key_index = 0;
         key_status = 0;
         key_len = 0;
@@ -1357,7 +1384,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1377,7 +1404,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1407,7 +1434,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1449,7 +1476,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1465,7 +1492,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1482,7 +1509,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -1501,7 +1528,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex = "");
     int LoadFrom(kvlist &kv, string ex="");
 };
 

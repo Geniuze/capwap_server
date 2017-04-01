@@ -23,6 +23,7 @@ extern "C" {
 #include "buffer.h"
 #include "capwap.h"
 #include "business.h"
+#include "dstring.h"
 
 typedef int (*read_cb)(struct ap_dev *ap, CBuffer &buffer);
 static read_cb read_cbs[] = {
@@ -70,7 +71,12 @@ static bool capwap_packet_check(CCapwapHeader *cwheader, int state)
         return CAPWAP_PACKET_TYPE_CHANGE_STATE_EVENT_REQ == capwap_packet_type(cwheader);
     case CAPWAP_STATE_RUN:
         return (CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ == capwap_packet_type(cwheader)) ||
-               (CAPWAP_PACKET_TYPE_ECHO_REQ == capwap_packet_type(cwheader));
+            (CAPWAP_PACKET_TYPE_ECHO_REQ == capwap_packet_type(cwheader)) ||
+            (CAPWAP_PACKET_TYPE_AP_CONFIG_RSP == capwap_packet_type(cwheader)) ||
+            (CAPWAP_PACKET_TYPE_WLAN_CONFIG_RSP == capwap_packet_type(cwheader)) ||
+            (CAPWAP_PACKET_TYPE_WTP_EVENT_REQ == capwap_packet_type(cwheader)) ||
+            (CAPWAP_PACKET_TYPE_AP_INFO_REQ == capwap_packet_type(cwheader)) ||
+            (CAPWAP_PACKET_TYPE_CONFIG_UPDATE_RSP == capwap_packet_type(cwheader));
     default:
         dlog(LOG_ERR, "%s.%d error state %d packet type %d",
              __FILE__, __LINE__, state, capwap_packet_type(cwheader));
@@ -105,6 +111,7 @@ static CCapwapHeader * capwap_process_header(CBuffer &buffer, struct ap_dev *ap)
     return ret_capwap_header;
 }
 
+
 // 该函为AP设备刚进入run状态时，需要发送wlanconfig,configupdate..等报文到AP，用以AP设备初始化
 static void capwap_state_run_initial_timeout(struct uloop_timeout *timeout)
 {
@@ -120,7 +127,7 @@ static void capwap_state_run_initial_timeout(struct uloop_timeout *timeout)
 
 int capwap_state_timeout(struct client *cl)
 {
-    if (NULL == cl->ap)
+    if ((NULL == cl->ap) || (cl->ap->state != CAPWAP_STATE_RUN))
     {
         cl->close_client_cb(cl);
         return 0;
@@ -133,6 +140,8 @@ int capwap_state_timeout(struct client *cl)
             return 0;
         }
         cl->ap->echo_timeout_cnt++;
+        dlog(LOG_ERR, "%s.%d AP %s %s %s:%d timeout %d times!", __FUNC__, __LINE__,
+             cl->ap->hw_addr, cl->ap->lan_ip, cl->ap->wan_ip, ntohs(cl->peer_addr.sin_port), cl->ap->echo_timeout_cnt);
         uloop_timeout_set(&cl->timeout, CAPWAP_ECHO_TIMEOUT);
     }
     return 0;
@@ -151,7 +160,10 @@ int capwap_read_cb(struct client *cl, char *buf, size_t len)
         }
 
         CBuffer buffer;
-        buffer.toBuffer(buf, len);
+        if (0 != buffer.toBuffer(buf, len))
+        {
+            break;
+        }
 
         ret = read_cbs[cl->ap->state](cl->ap, buffer);
 
@@ -170,31 +182,30 @@ int capwap_read_cb(struct client *cl, char *buf, size_t len)
 }
 int capwap_state_change_cb(struct client *cl)
 {
-    // TODO 更新数据库相关数据，离线时间
+    CBusiness business;
+    business.set_business_type(CAPWAP_BUSINESS_AP_LEAVE);
 
-    dlog(LOG_ERR, "AP : %s-%s:%d is Quit", cl->ap->hw_addr,
-         cl->ap->lan_ip, ntohs(cl->peer_addr.sin_port));
+    dlog(LOG_ERR, "AP : %s %s %s:%d QUIT", cl->ap->hw_addr,
+         cl->ap->lan_ip, cl->ap->wan_ip, ntohs(cl->peer_addr.sin_port));
 
-    del_ap_dev(cl->ap);
-    SAFE_FREE(cl->ap); 
+    business.Process(cl->ap);
+
+    SAFE_FREE(cl->ap);
     return 0;
 }
 
 int capwap_state_start(struct ap_dev *ap, CBuffer &buffer)
 {
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
     ap->state ++;
     return CAPWAP_MESSAGE_SAVE;
 }
 int capwap_state_idle(struct ap_dev *ap, CBuffer &buffer)
 {
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
     ap->state ++;
     return CAPWAP_MESSAGE_SAVE;
 }
 int capwap_state_sulking(struct ap_dev *ap, CBuffer &buffer)
 {
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
     ap->state ++;
     return CAPWAP_MESSAGE_SAVE;
 }
@@ -212,11 +223,8 @@ int capwap_state_discovery(struct ap_dev *ap, CBuffer &buffer)
         return CAPWAP_MESSAGE_DONE;
     }
 
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
     preq->Parse(buffer); //解析除头部以外的内容
     preq->SaveTo(str);
-
-    dlog(LOG_DEBUG, "string = %s", str.c_str());
 
     business.set_business_type(CAPWAP_BUSINESS_DISCOVERY);
     business.set_business_string(str);
@@ -241,7 +249,6 @@ int capwap_state_join(struct ap_dev *ap, CBuffer &buffer)
     CBusiness business;
 
     uloop_timeout_cancel(&ap->cl->timeout);
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
 
     preq = capwap_process_header(buffer, ap);
     if (preq == NULL)
@@ -251,8 +258,6 @@ int capwap_state_join(struct ap_dev *ap, CBuffer &buffer)
     }
     preq->Parse(buffer);
     preq->SaveTo(str);
-
-    dlog(LOG_DEBUG, "%s", str.c_str());
 
     business.set_business_type(CAPWAP_BUSINESS_JOIN);
     business.set_business_string(str);
@@ -273,7 +278,6 @@ int capwap_state_join(struct ap_dev *ap, CBuffer &buffer)
 }
 int capwap_state_image_data(struct ap_dev *ap, CBuffer &buffer)
 {
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
     ap->state ++;
     return CAPWAP_MESSAGE_DONE;
 }
@@ -284,7 +288,6 @@ int capwap_state_configure(struct ap_dev *ap, CBuffer &buffer)
     CBusiness business;
 
     uloop_timeout_cancel(&ap->cl->timeout);
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
 
     preq = capwap_process_header(buffer, ap);
     if (preq == NULL)
@@ -294,8 +297,6 @@ int capwap_state_configure(struct ap_dev *ap, CBuffer &buffer)
     }
     preq->Parse(buffer);
     preq->SaveTo(str);
-
-    dlog(LOG_DEBUG, "%s", str.c_str());
 
     business.set_business_type(CAPWAP_BUSINESS_CONFIGURE);
     business.set_business_string(str);
@@ -321,7 +322,6 @@ int capwap_state_data_check(struct ap_dev *ap, CBuffer &buffer)
     CBusiness business;
 
     uloop_timeout_cancel(&ap->cl->timeout);
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
 
     preq = capwap_process_header(buffer, ap);
     if (preq == NULL)
@@ -331,8 +331,6 @@ int capwap_state_data_check(struct ap_dev *ap, CBuffer &buffer)
     }
     preq->Parse(buffer);
     preq->SaveTo(str);
-
-    dlog(LOG_DEBUG, "%s", str.c_str());
 
     business.set_business_type(CAPWAP_BUSINESS_DATA_CHECK);
     business.set_business_string(str);
@@ -356,9 +354,6 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
     string str = "";
     CBusiness business;
 
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
-    dlog(LOG_ERR, "AP %s-%s:%d is Running!", ap->hw_addr,
-         ap->lan_ip, ntohs(ap->cl->peer_addr.sin_port));
     preq = capwap_process_header(buffer, ap);
     if (preq == NULL)
     {
@@ -366,8 +361,6 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
     }
     preq->Parse(buffer);
     preq->SaveTo(str);
-
-    dlog(LOG_DEBUG, "%s", str.c_str());
 
     switch(capwap_packet_type(preq))
     {
@@ -388,6 +381,23 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
             ap->echo_cnt++;
         }
         break;
+    case CAPWAP_PACKET_TYPE_AP_CONFIG_RSP:
+        business.set_business_type(CAPWAP_BUSINESS_AP_CONFIG_RSP);
+        break;
+    case CAPWAP_PACKET_TYPE_WLAN_CONFIG_RSP:
+        business.set_business_type(CAPWAP_BUSINESS_WLAN_CONFIG_RSP);
+        break;
+    case CAPWAP_PACKET_TYPE_WTP_EVENT_REQ:
+        business.set_business_type(CAPWAP_BUSINESS_WTP_EVENT_REQ);
+        // 因为WTP一个报文可能存在多个细节小业务，在处理该报文的时候需要源报文分解业务
+        business.set_business_packet(preq);
+        break;
+    case CAPWAP_PACKET_TYPE_AP_INFO_REQ:
+        business.set_business_type(CAPWAP_BUSINESS_AP_INFO_REQ);
+        break;
+    case CAPWAP_PACKET_TYPE_CONFIG_UPDATE_RSP:
+        business.set_business_type(CAPWAP_BUSINESS_CONFIG_UPDATE_RSP);
+        break;
     default:
         dlog(LOG_ERR, "%s.%d Unknown packet type %d", __FILE__, __LINE__, capwap_packet_type(preq));
         break;
@@ -396,7 +406,7 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
 
     if (BUSINESS_SUCCESS != business.Process(ap))
     {
-        dlog(LOG_ERR, "%s.%d business process error business type %d str %s", __FILE__, __LINE__,
+        dlog(LOG_ERR, "%s.%d business process error business type %d str {%s}", __FUNC__, __LINE__,
              business.type(), business.str().c_str());
         //ap->state = CAPWAP_STATE_QUIT;
     }
@@ -406,13 +416,11 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
 }
 int capwap_state_reset(struct ap_dev *ap, CBuffer &buffer)
 {
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
     ap->state ++;
     return CAPWAP_MESSAGE_DONE;
 }
 int capwap_state_quit(struct ap_dev *ap, CBuffer &buffer)
 {
-    dlog(LOG_DEBUG, "ap state : %s", capwap_state_string[ap->state]);
     ap->state  = CAPWAP_STATE_QUIT;
 
     //struct client *cl = ap->cl;

@@ -19,6 +19,7 @@
 #define IP_ADDR_FMT "%u.%u.%u.%u"
 #define IP_ADDR_VAL(addr) (addr[0]),(addr[1]),(addr[2]),(addr[3])
 #define IP_ADDR_RVAL(addr) (&addr[0]),(&addr[1]),(&addr[2]),(&addr[3])
+#define __FUNC__ (toUpper(__func__).c_str())
 
 
 
@@ -111,11 +112,11 @@
 #define STRING_WP_CODE "wp_code"
 #define STRING_WP_PROTO "wp_proto"
 #define STRING_EF_ENABLE "ef_enable"
-#define STIRNG_EF_CODE "ef_code"
-#define STIRNG_EF_PROTO "ef_proto"
-#define STIRNG_EF_INTERVAL "ef_interval"
-#define STIRNG_EF_SCAN_TYPE "ef_scan_type"
-#define STIRNG_EF_SERVER_IP_TYPE "ef_server_ip_tyep"
+#define STRING_EF_CODE "ef_code"
+#define STRING_EF_PROTO "ef_proto"
+#define STRING_EF_INTERVAL "ef_interval"
+#define STRING_EF_SCAN_TYPE "ef_scan_type"
+#define STRING_EF_SERVER_IP_TYPE "ef_server_ip_tyep"
 #define STRING_EF_SERVER_IP_ADDR "ef_server_ip_addr"
 #define STRING_EF_SERVER_PORT "ef_server_port"
 #define STRING_WE_AD_INTERVAL "we_ad_interval"
@@ -146,7 +147,40 @@
 #define STRING_REMOTE_SYNC_ENABLE "remote_sync_enable"
 #define STRING_LAN_PORTAL_ENABLE "lan_portal_enable"
 #define STRING_LAN_PORTAL_URL "lan_portal_url"
+#define STRING_CONNECTION_MODE "connection_mode"
 
+#define STRING_ESSID "wlan_essid"
+#define STRING_ESSID_ENCODE "wlan_essid_encode"
+#define STRING_PORTAL_ENABLE "portal_enable"
+#define STRING_WX_AUTH_ENABLE "wx_auth_enable"
+#define STRING_PORTAL_URL "portal_url"
+#define STRING_HIDE_SSID "hide_ssid"
+#define STRING_WDS_ENABLE "wds_enable"
+#define STRING_VLAN_ID "vlan_id"
+#define STRING_WLAN_ID "wlan_id"
+#define STRING_MAX_STATIONS "max_stations"
+#define STRING_SSID_DOWN "ssid_down_traffic"
+#define STRING_SSID_UP "ssid_up_traffic"
+#define STRING_USER_DOWN "user_down_traffic"
+#define STRING_USER_UP "user_up_traffic"
+#define STRING_QOS_ENABLE "qos_enable"
+#define STRING_TUNNEL_ENABLE "tunnel_enable"
+#define STRING_STA_ISOLATE "sta_isolate"
+#define STRING_BROADCAST_TO_UNICAST_ENABLE "mcast_enhance_enable"
+#define STRING_BROADCAST_TO_UNICAST_MAX_STA "mcast_enhance_max_sta"
+#define STRING_BROADCAST_TO_UNICAST_TIMEOUT "mcast_enhance_timeout"
+#define STRING_SECURE_TYPE "secure_type"
+#define STRING_KEY_INDEX "key_index"
+#define STRING_KEY_STATUS "key_status"
+#define STRING_KEY "key"
+#define STRING_KEY_LENGTH "key_length"
+#define STRING_GROUP_TSC32 "group_tsc32"
+#define STRING_GROUP_TSC16 "group_tsc16"
+#define STRING_AUTH_TYPE "auth_type"
+#define STRING_MAC_MODE "mac_mode"
+#define STRING_MAC_FILTER_RULES "mac_filter_rules"
+#define STRING_WX_ENABLE "wx_enable"
+#define STRING_WX_URL "wx_url"
 
 #define STRING_PORTAL_CUSTOM_COUNT "portal_custom_count"
 #define STRING_PORTAL_CUSTOM_KEY_LEN "portal_custom_key_len"
@@ -158,12 +192,54 @@
 #define STRING_TIME_STAMP "time_stamp"
 #define STRING_BY_PASS_ENABLE "by_pass_enable"
 
+#define STRING_PKT_ID "pkt_id"
+#define STRING_PKT_TYPE "pkt_type"
+#define STRING_MSG_TYPE "msg_type"
+#define STRING_SUB_TYPE "sub_type"
+#define STRING_USER_IP "user_ip"
+#define STRING_STA_MAC "sta_mac"
+#define STRING_USER_ROLE "user_role"
+#define STRING_SESSION_TIME "session_time"
+#define STRING_RADIO_ID "radio_id"
+#define STRING_WLAN_ID "wlan_id"
+#define STRING_COUNT "count"
+#define STRING_TYPE "type"
+#define STRING_LENGTH "length"
+#define STRING_VALUE "value"
+#define STRING_AC_ADDR "ac_addr"
+#define STRING_CLOUD_ADDR "cloud_addr"
+#define STRING_CURREND_RUNMODE "current_runmode"
+
+#define STRING_VENDOR_ID "vendor_id"
+#define STRING_IDENTIFIER "identifier"
+#define STRING_SELECT_ENABLE "select_enable"
+#define STRING_SELECT_2G_CHANNEL "select_2g_channel"
+#define STRING_SELECT_5G_CHANNEL "select_5g_channel"
+#define STRING_FTP_PATH "ftp_path"
+#define STRING_FTP_PASSWORD "ftp_password"
+#define STRING_FTP_USER_NAME "ftp_user_name"
+#define STRING_DOWNLOAD_TYPE "download_type"
+#define STRING_FILE_SERVER "file_server"
+#define STRING_FILE_NAME "file_name"
+
+#define STRING_IP_TYPE "ip_type"
+#define STRING_MAC_LEN "mac_length"
+#define STRING_TX_BYTES_HIGH "tx_bytes_high"
+#define STRING_TX_BYTES "tx_bytes"
+#define STRING_RX_BYTES_HIGH "rx_bytes_high"
+#define STRING_RX_BYTES "rx_bytes"
+#define STRING_TX_PAKCETS "tx_packets"
+#define STRING_RX_PAKCETS "rx_packets"
+#define STRING_DOWN_CAUSE "down_cause"
+#define STRING_STATE "state"
+
 string toString(uint32_t value);
 string toString(int value);
 string toString(time_t value);
 string toString(char *value);
 string toString(uint8_t value);
 string toString(uint16_t value);
+string toString(bool value);
 uint8_t  toInt8(string value);
 uint16_t toInt16(string value);
 uint32_t toInt32(string value);
@@ -171,5 +247,7 @@ uint32_t toInt(string value);
 uint64_t toInt64(string value);
 vector<string> split(string &str, string d=";");
 int format_macaddr(string &mac);
+string toUpper(string src);
+string toUpper(const char *src);
 
 #endif

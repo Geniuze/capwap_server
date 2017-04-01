@@ -55,6 +55,16 @@ int SetValue(kvlist &kv, string key, string value)
     kv[key] = value;
     return 0;
 }
+int SetValue(kvlist &kv, string key, uint32_t value)
+{
+    kv[key] = toString(value);
+    return 0;
+}
+int SetValue(kvlist &kv, string key, bool value)
+{
+    kv[key] = toString(value);
+    return 0;
+}
 
 int SetValue(kvlist &kv, const char *key, const char *value)
 {
@@ -73,7 +83,7 @@ int DumpKv(kvlist &kv)
         dumpstr.append(it->first + "=" + it->second + ";");
     }
 
-    dlog(LOG_DEBUG, "%s", dumpstr.c_str());
+    dlog(LOG_DEBUG, "DUMP KVLIST : {%s}", dumpstr.c_str());
 
     return 0;
 }

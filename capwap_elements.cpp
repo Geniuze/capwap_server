@@ -37,7 +37,7 @@ int CWTPBoardDataTlv::Parse(CBuffer &buffer)
     return 0;
 }
 
-int CWTPBoardDataTlv::SaveTo(string &str)
+int CWTPBoardDataTlv::SaveTo(string &str, string ex)
 {
     if (isValid())
     {
@@ -66,7 +66,23 @@ int CVendorSpecPayLoadTlv::Parse(CBuffer &buffer)
         return 0;
     }
 
-    ap_lanip.Parse(buffer);
+    while (buffer.GetOffset() < buffer.GetLength())
+    {
+        int start = buffer.GetOffset();
+        int end = start;
+
+        actl_user_info.Parse(buffer);
+        actl_sta_info.Parse(buffer);
+        station_ip.Parse(buffer);
+        sta_state.Parse(buffer);
+        ap_lanip.Parse(buffer);
+
+        end = buffer.GetOffset();
+        if (start == end)
+        {
+            SkipTlv(buffer);
+        }
+    }
 
     return 0;
 }
@@ -88,14 +104,25 @@ int CVendorSpecPayLoadTlv::Assemble(CBuffer &buffer)
     traffic_statics_conf.Assemble(buffer);
     packet_power_conf.Assemble(buffer);
     channel_reuse_conf.Assemble(buffer);
+    time_stamp.Assemble(buffer);
+    by_pass.Assemble(buffer);
+    vlan_conf.Assemble(buffer);
+    mcast_enhance.Assemble(buffer);
+    wx_auth.Assemble(buffer);
+    wlan_info.Assemble(buffer);
+    actl_user_info.Assemble(buffer);
 
     return 0;
 }
-int CVendorSpecPayLoadTlv::SaveTo(string &str)
+int CVendorSpecPayLoadTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
 
+    actl_user_info.SaveTo(str);
+    actl_sta_info.SaveTo(str);
+    station_ip.SaveTo(str);
+    sta_state.SaveTo(str);
     ap_lanip.SaveTo(str);
 
     return 0;
@@ -152,6 +179,41 @@ int CVendorSpecPayLoadTlv::LoadFrom(kvlist &kv,string ex)
     {
         channel_reuse_conf.LoadFrom(kv, ex);
         _elength += channel_reuse_conf.length() + 4;
+    }
+    if (time_stamp.isValid())
+    {
+        time_stamp.LoadFrom(kv, ex);
+        _elength += time_stamp.length() + 4;
+    }
+    if (by_pass.isValid())
+    {
+        by_pass.LoadFrom(kv, ex);
+        _elength += by_pass.length() + 4;
+    }
+    if (vlan_conf.isValid())
+    {
+        vlan_conf.LoadFrom(kv, ex);
+        _elength += vlan_conf.length() + 4;
+    }
+    if (mcast_enhance.isValid())
+    {
+        mcast_enhance.LoadFrom(kv, ex);
+        _elength += mcast_enhance.length() + 4;
+    }
+    if (wx_auth.isValid())
+    {
+        wx_auth.LoadFrom(kv, ex);
+        _elength += wx_auth.length() + 4;
+    }
+    if (wlan_info.isValid())
+    {
+        wlan_info.LoadFrom(kv, ex);
+        _elength += wlan_info.length() + 4;
+    }
+    if (actl_user_info.isValid())
+    {
+        actl_user_info.LoadFrom(kv, ex);
+        _elength += actl_user_info.length() + 4;
     }
 
     return 0;
@@ -216,20 +278,20 @@ int CWTPRadioInfoTlv::Parse(CBuffer &buffer)
     return 0;
 }
 
-int CWTPRadioInfoTlv::SaveTo(string &str)
+int CWTPRadioInfoTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
 
-    str.append(STRING_RADIO_ID + toString((uint32_t)radio_id) + "=" + toString((uint32_t)radio_id) + ";");
-    str.append(STRING_RADIO_TYPE_11A + toString((uint32_t)radio_id) + "=" +
-               toString((uint32_t)u_radio_type.s.radio_type_11a) + ";");
-    str.append(STRING_RADIO_TYPE_11B + toString((uint32_t)radio_id) + "=" +
-               toString((uint32_t)u_radio_type.s.radio_type_11b) + ";");
-    str.append(STRING_RADIO_TYPE_11G + toString((uint32_t)radio_id) + "=" +
-               toString((uint32_t)u_radio_type.s.radio_type_11g) + ";");
-    str.append(STRING_RADIO_TYPE_11N + toString((uint32_t)radio_id) + "=" +
-               toString((uint32_t)u_radio_type.s.radio_type_11n) + ";");
+    str.append(STRING_RADIO_ID + ex + "=" + toString(radio_id) + ";");
+    str.append(STRING_RADIO_TYPE_11A + ex + "=" +
+               toString(u_radio_type.s.radio_type_11a) + ";");
+    str.append(STRING_RADIO_TYPE_11B + ex + "=" +
+               toString(u_radio_type.s.radio_type_11b) + ";");
+    str.append(STRING_RADIO_TYPE_11G + ex + "=" +
+               toString(u_radio_type.s.radio_type_11g) + ";");
+    str.append(STRING_RADIO_TYPE_11N + ex + "=" +
+               toString(u_radio_type.s.radio_type_11n) + ";");
 
     return 0;
 }
@@ -277,16 +339,16 @@ int CWTPDescriptorTlv::Parse(CBuffer &buffer)
     return 0;
 }
 
-int CWTPDescriptorTlv::SaveTo(string &str)
+int CWTPDescriptorTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
 
-    str.append(STRING_MAX_RADIOS"=" + toString((uint32_t)max_radios) + ";");
-    str.append(STRING_RADIO_INUSE"=" + toString((uint32_t)radio_inuse) + ";");
-    str.append(STRING_ENCRYPT_NUMBER"=" + toString((uint32_t)encrypt_number) + ";");
-    str.append(STRING_ENCRYPT_WBID"=" + toString((uint32_t)u_encrypt_wbid.s.wbid) + ";");
-    str.append(STRING_ENCRYPT_CAPABILITIES"=" + toString((uint32_t)encrypt_capabilities) + ";");
+    str.append(STRING_MAX_RADIOS"=" + toString(max_radios) + ";");
+    str.append(STRING_RADIO_INUSE"=" + toString(radio_inuse) + ";");
+    str.append(STRING_ENCRYPT_NUMBER"=" + toString(encrypt_number) + ";");
+    str.append(STRING_ENCRYPT_WBID"=" + toString(u_encrypt_wbid.s.wbid) + ";");
+    str.append(STRING_ENCRYPT_CAPABILITIES"=" + toString(encrypt_capabilities) + ";");
 
     hardware_version.SaveTo(str);
     software_version.SaveTo(str);
@@ -302,7 +364,7 @@ int CResultTlv::Parse(CBuffer &buffer)
     buffer.retrive32(result);
     return 0;
 }
-int CResultTlv::SaveTo(string &str)
+int CResultTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
@@ -347,7 +409,7 @@ int CWTPRadioConfTlv::Parse(CBuffer &buffer)
 
     return 0;
 }
-int CWTPRadioConfTlv::SaveTo(string &str)
+int CWTPRadioConfTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
@@ -355,19 +417,19 @@ int CWTPRadioConfTlv::SaveTo(string &str)
     char buf[32] = {0};
     snprintf(buf, sizeof(buf), ETHER_ADDR_FMT, ETHER_ADDR_VAL(bssid));
 
-    str.append(STRING_RADIO_ID + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)radio_id) + ";");
-    str.append(STRING_SHORT_PREAMBLE + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)short_preamble) + ";");
-    str.append(STRING_BSSIDS_NUMBER + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)bssids_number) + ";");
-    str.append(STRING_DTIM_PERIOD + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)dtim_period) + ";");
-    str.append(STRING_BSSID + toString((uint32_t)radio_id) + "="
+    str.append(STRING_RADIO_ID + ex + "="
+               + toString(radio_id) + ";");
+    str.append(STRING_SHORT_PREAMBLE + ex + "="
+               + toString(short_preamble) + ";");
+    str.append(STRING_BSSIDS_NUMBER + ex + "="
+               + toString(bssids_number) + ";");
+    str.append(STRING_DTIM_PERIOD + ex + "="
+               + toString(dtim_period) + ";");
+    str.append(STRING_BSSID + ex + "="
                + toString(buf) + ";");
-    str.append(STRING_BEACON_PERIOD + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)beacon_period) + ";");
-//    str.append(STRING_COUNTRY_STRING + toString((uint32_t)radio_id) + "="
+    str.append(STRING_BEACON_PERIOD + ex + "="
+               + toString(beacon_period) + ";");
+//    str.append(STRING_COUNTRY_STRING + ex + "="
 //               + country_string + ";");
 
     return 0;
@@ -426,15 +488,15 @@ int CTxPowerTlv::Parse(CBuffer &buffer)
     buffer.retrive16(cur_tx_power);
     return 0;
 }
-int CTxPowerTlv::SaveTo(string &str)
+int CTxPowerTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
 
-    str.append(STRING_RADIO_ID + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)radio_id) + ";");
-    str.append(STRING_CURRENT_TXPOWER + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)cur_tx_power) + ";");
+    str.append(STRING_RADIO_ID + ex + "="
+               + toString(radio_id) + ";");
+    str.append(STRING_CURRENT_TXPOWER + ex + "="
+               + toString(cur_tx_power) + ";");
 
     return 0;
 }
@@ -476,19 +538,19 @@ int CDSCtrlTlv::Parse(CBuffer &buffer)
     buffer.retrive32(energy_detect_threshold);
     return 0;
 }
-int CDSCtrlTlv::SaveTo(string &str)
+int CDSCtrlTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
 
-    str.append(STRING_RADIO_ID + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)radio_id) + ";");
-    str.append(STRING_CURRENT_CHANNEL + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)cur_channel) + ";");
-    str.append(STRING_CURRENT_CCA + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)cur_cca) + ";");
-    str.append(STRING_ENERGY_DETECT_THRESHOLD + toString((uint32_t)radio_id) + "="
-               + toString((uint32_t)energy_detect_threshold) + ";");
+    str.append(STRING_RADIO_ID + ex + "="
+               + toString(radio_id) + ";");
+    str.append(STRING_CURRENT_CHANNEL + ex + "="
+               + toString(cur_channel) + ";");
+    str.append(STRING_CURRENT_CCA + ex + "="
+               + toString(cur_cca) + ";");
+    str.append(STRING_ENERGY_DETECT_THRESHOLD + ex + "="
+               + toString(energy_detect_threshold) + ";");
     return 0;
 }
 int CDSCtrlTlv::Assemble(CBuffer &buffer)
@@ -623,14 +685,14 @@ int CRadioOperationalStateTlv::Parse(CBuffer &buffer)
     return 0;
 }
 
-int CRadioOperationalStateTlv::SaveTo(string &str)
+int CRadioOperationalStateTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
 
-    str.append(STRING_RADIO_ID + toString(radio_id) + "=" + toString(radio_id) + ";");
-    str.append(STRING_RADIO_STATE + toString(radio_id) + "=" + toString(radio_op_state) + ";");
-    str.append(STRING_RADIO_CAUSE + toString(radio_id) + "=" + toString(radio_op_cause) + ";");
+    str.append(STRING_RADIO_ID + ex + "=" + toString(radio_id) + ";");
+    str.append(STRING_RADIO_STATE + ex + "=" + toString(radio_op_state) + ";");
+    str.append(STRING_RADIO_CAUSE + ex + "=" + toString(radio_op_cause) + ";");
     return 0;
 }
 
@@ -647,7 +709,7 @@ int CDataTransferTlv::Parse(CBuffer &buffer)
 
     return 0;
 }
-int CDataTransferTlv::SaveTo(string &str)
+int CDataTransferTlv::SaveTo(string &str, string ex)
 {
     if (!isValid())
         return 0;
@@ -701,6 +763,8 @@ int CRomingConfTlv::LoadFrom(kvlist &kv, string ex)
 
     enable = toInt8(GetValue(kv, STRING_ROMING_CONFIG_ENABLE));
     signal = toInt(GetValue(kv, STRING_ROMING_CONFIG_SIGNAL));
+
+    _elength = 5;
 
     return 0;
 }
@@ -780,11 +844,11 @@ int CWirelessLocationConfTlv::LoadFrom(kvlist &kv, string ex)
     wp_proto = toInt8(GetValue(kv, STRING_WP_PROTO));
 
     ef_enable = toInt8(GetValue(kv, STRING_EF_ENABLE));
-    ef_code = toInt8(GetValue(kv, STIRNG_EF_CODE));
-    ef_proto = toInt8(GetValue(kv, STIRNG_EF_PROTO));
-    ef_intv = toInt8(GetValue(kv, STIRNG_EF_INTERVAL));
-    ef_scan_type = toInt8(GetValue(kv, STIRNG_EF_SCAN_TYPE));
-    ef_server_ip_type = toInt8(GetValue(kv, STIRNG_EF_SERVER_IP_TYPE));
+    ef_code = toInt8(GetValue(kv, STRING_EF_CODE));
+    ef_proto = toInt8(GetValue(kv, STRING_EF_PROTO));
+    ef_intv = toInt8(GetValue(kv, STRING_EF_INTERVAL));
+    ef_scan_type = toInt8(GetValue(kv, STRING_EF_SCAN_TYPE));
+    ef_server_ip_type = toInt8(GetValue(kv, STRING_EF_SERVER_IP_TYPE));
 
     _elength += 11;
 
@@ -1038,7 +1102,7 @@ int CLanPortalConfTlv::Assemble(CBuffer &buffer)
     buffer.store32(portal_enable);
     buffer.store32(portal_url_len);
     buffer.storerawbytes((uint8_t*)portal_url.c_str(), portal_url_len);
-    buffer.storerawbytes(reserved, sizeof(reserved));
+//    buffer.storerawbytes(reserved, sizeof(reserved));  // AP未解析字保留字段保留字段无意义
 
     return 0;
 }
@@ -1055,3 +1119,328 @@ int CLanPortalConfTlv::LoadFrom(kvlist &kv, string ex)
     return 0;
 }
 
+int CConnectionModeConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+    AssembleEH(buffer);
+
+    buffer.store8(connection_mode);
+
+    return 0;
+}
+int CConnectionModeConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    connection_mode = toInt8(GetValue(kv, STRING_CONNECTION_MODE));
+    _elength = 1;
+    return 0;
+}
+
+
+int CAddWlanTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(radio_id);
+    buffer.store8(wlan_id);
+    buffer.store16(u_capability.capability);
+    buffer.store8(key_index);
+    buffer.store8(key_status);
+    buffer.store16(key_len);
+    buffer.storerawbytes(key, sizeof(key));
+    buffer.store32(group_tsc32);
+    buffer.store16(group_tsc16);
+    buffer.store8(qos);
+    buffer.store8(auth_type);
+    buffer.store8(mac_mode);
+    buffer.store8(tunnel_mode);
+    buffer.store8(hide_ssid);
+    buffer.storerawbytes((uint8_t*)ssid.c_str(), ssid.length());
+
+    return 0;
+}
+int CAddWlanTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+    string skey;
+
+    radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
+    wlan_id = toInt8(GetValue(kv, STRING_WLAN_ID + ex));
+    u_capability.s.qos_enable = toInt16(GetValue(kv, STRING_QOS_ENABLE + ex));
+    key_index = toInt8(GetValue(kv, STRING_KEY_INDEX + ex));
+    // key_status = toInt8(GetValue(kv, STRING_KEY_STATUS + ex)); // addwlan 中不使用此字段
+    key_len = toInt16(GetValue(kv, STRING_KEY_LENGTH + ex)); // WEP 使用
+    skey = GetValue(kv, STRING_KEY + ex);
+    strncpy((char*)key, skey.c_str(), sizeof(key));
+    // group_tsc32 = toInt32(GetValue(kv, STRING_GROUP_TSC32 + ex));
+    // group_tsc16 = toInt32(GetValue(kv, STRING_GROUP_TSC16 + ex));
+    // qos = 0;  //未启用 使用capability中的某一位表示qos是否开启
+    auth_type = toInt8(GetValue(kv, STRING_SECURE_TYPE + ex));
+    // mac_mode = toInt8(GetValue(kv, STRING_MAC_MODE + ex));
+    // tunnel_mode = toInt8(GetValue(kv, STRING_TUNNEL_ENABLE + ex));
+    hide_ssid = toInt8(GetValue(kv, STRING_HIDE_SSID + ex));
+    ssid = GetValue(kv, STRING_ESSID + ex);
+
+    _elength = 51 + ssid.length();
+
+    return 0;
+}
+
+int CAddStationTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive8(radio_id);
+    buffer.retrive8(mac_len);
+    buffer.retriverawbytes(mac, mac_len);
+    buffer.retrive32(vlan_id);
+    buffer.retrive8(wlan_id);
+    buffer.retrive8(ssid_len);
+    ssid.assign((const char *)buffer.GetPtr(), ssid_len);
+    buffer.retriverawbytes(NULL, ssid_len);
+
+    return 0;
+}
+int CAddStationTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+    char buf[128] = {0};
+
+    str.append(STRING_RADIO_ID"=" + toString(radio_id) + ";");
+
+    snprintf(buf, sizeof(buf), ETHER_ADDR_FMT, ETHER_ADDR_VAL(mac));
+    str.append(STRING_STA_MAC"=" + toString(buf) + ";");
+
+    str.append(STRING_VLAN_ID"=" + toString(vlan_id) + ";");
+    str.append(STRING_WLAN_ID"=" + toString(wlan_id) + ";");
+    str.append(STRING_ESSID"=" + ssid + ";");
+
+    return 0;
+}
+
+int CDelStationTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive8(radio_id);
+    buffer.retrive8(mac_len);
+    buffer.retriverawbytes(mac, mac_len);
+    buffer.retrive8(wlan_id);
+
+    return 0;
+}
+int CDelStationTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    char buf[128] = {0};
+    str.append(STRING_RADIO_ID"=" + toString(radio_id) + ";");
+
+    snprintf(buf, sizeof(buf), ETHER_ADDR_FMT, ETHER_ADDR_VAL(mac));
+    str.append(STRING_STA_MAC"=" + toString(buf) + ";");
+
+    str.append(STRING_WLAN_ID"=" + toString(wlan_id) + ";");
+
+    return 0;
+}
+
+int CConfInfoEntry::Parse(CBuffer &buffer)
+{
+    buffer.retrive32(type);
+    buffer.retrive32(len);
+    value.assign((const char *)buffer.GetPtr(), len);
+    buffer.retriverawbytes(NULL, len);
+
+    return 0;
+}
+int CConfInfoEntry::SaveTo(string &str, string ex)
+{
+    str.append(STRING_TYPE + ex + "=" + toString(type) + ";");
+    str.append(STRING_LENGTH + ex + "=" + toString(len) + ";");
+    str.append(STRING_VALUE + ex + "=" + value + ";");
+
+    return 0;
+}
+
+int CConfInfoTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive32(count);
+
+    conf_infos.resize(count);
+    for (size_t i=0; i<count; i++)
+    {
+        conf_infos[i].Parse(buffer);
+    }
+
+    return 0;
+}
+int CConfInfoTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    for (size_t i=0; i<conf_infos.size(); i++)
+    {
+        conf_infos[i].SaveTo(str, toString(i));
+    }
+    return 0;
+}
+
+int CConfInfoAllTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive8(ac_addr_len);
+    ac_addr.assign((const char *)buffer.GetPtr(), ac_addr_len);
+    buffer.retriverawbytes(NULL, ac_addr_len);
+
+    buffer.retrive8(cloud_addr_len);
+    cloud_addr.assign((const char *)buffer.GetPtr(), cloud_addr_len);
+    buffer.retriverawbytes(NULL, cloud_addr_len);
+
+    buffer.retrive8(current_run_mode);
+
+    return 0;
+}
+int CConfInfoAllTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+    str.append(STRING_AC_ADDR"=" + ac_addr + ";");
+    str.append(STRING_CLOUD_ADDR"=" + cloud_addr + ";");
+    str.append(STRING_CURREND_RUNMODE"=" + toString(current_run_mode) + ";");
+
+    return 0;
+}
+
+int CACTimeStampTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(timestamp);
+
+    return 0;
+}
+int CACTimeStampTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+    timestamp = toInt(GetValue(kv, STRING_TIME_STAMP));
+
+    _elength = 4;
+
+    return 0;
+}
+
+int CImageIdentifierTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(vendor_id);
+
+    dev_model.Assemble(buffer);
+    software_version.Assemble(buffer);
+    file_name.Assemble(buffer);
+    file_server.Assemble(buffer);
+    download_type.Assemble(buffer);
+    ftp_user_name.Assemble(buffer);
+    ftp_password.Assemble(buffer);
+    ftp_path.Assemble(buffer);
+
+    return 0;
+}
+int CImageIdentifierTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+    vendor_id = toInt(GetValue(kv, STRING_VENDOR_ID));
+    _elength += 4;
+    if (dev_model.isValid())
+    {
+        dev_model.LoadFrom(kv);
+        _elength += dev_model.length() + 4;
+    }
+    if (software_version.isValid())
+    {
+        software_version.LoadFrom(kv);
+        _elength += software_version.length() + 4;
+    }
+    if (file_name.isValid())
+    {
+        file_name.LoadFrom(kv);
+        _elength += file_name.length() + 4;
+    }
+    if (file_server.isValid())
+    {
+        file_server.LoadFrom(kv);
+        _elength += file_server.length() + 4;
+    }
+    if (download_type.isValid())
+    {
+        download_type.LoadFrom(kv);
+        _elength += download_type.length() + 4;
+    }
+    if (ftp_user_name.isValid())
+    {
+        ftp_user_name.LoadFrom(kv);
+        _elength += ftp_user_name.length() + 4;
+    }
+    if (ftp_password.isValid())
+    {
+        ftp_password.LoadFrom(kv);
+        _elength += ftp_password.length() + 4;
+    }
+    if (ftp_path.isValid())
+    {
+        ftp_path.LoadFrom(kv);
+        _elength += ftp_path.length() + 4;
+    }
+
+    return 0;
+}
+
+int CAutoChannelSelectTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+    buffer.store32(identifier);
+    buffer.store8(select_enable);
+    buffer.store8(select_2g_channel);
+    buffer.store8(select_5g_channel);
+
+    return 0;
+}
+int CAutoChannelSelectTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+    identifier = toInt(GetValue(kv, STRING_IDENTIFIER));
+    select_enable = toInt8(GetValue(kv, STRING_SELECT_ENABLE));
+    select_2g_channel = toInt8(GetValue(kv, STRING_SELECT_2G_CHANNEL));
+    select_5g_channel = toInt8(GetValue(kv, STRING_SELECT_5G_CHANNEL));
+
+    return 0;
+}

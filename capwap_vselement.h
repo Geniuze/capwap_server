@@ -156,7 +156,7 @@ public:
     ~CElement(){}
     int Parse(CBuffer &buffer) { return 0; }
     int Assemble(CBuffer &buffer) { return 0; }
-    int SaveTo(string &str) { return 0; }
+    int SaveTo(string &str, string ex="") { return 0; }
     int LoadFrom(kvlist &kv,string ex="") { return 0; }
     int ParseEH(CBuffer &buffer);
     int AssembleEH(CBuffer &buffer);
@@ -172,6 +172,7 @@ public:
 
     int skipEH(CBuffer &buffer);
     int ReAssembleEH(CBuffer &buffer);
+    int SkipTlv(CBuffer &buffer);
 };
 
 class CMiniElement : public CElementUtil
@@ -185,7 +186,7 @@ public:
 
     int Parse(CBuffer &buffer) { return 0; }
     int Assemble(CBuffer &buffer) { return 0; }
-    int SaveTo(string &str) { return 0; }
+    int SaveTo(string &str, string ex="") { return 0; }
     int LoadFrom(kvlist &kv,string ex="") { return 0; }
     int ParseEH(CBuffer &buffer);
     int AssembleEH(CBuffer &buffer);
@@ -215,7 +216,7 @@ public:
 
     int Parse(CBuffer &buffer);
     int Assemble(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
     int LoadFrom(kvlist &kv, string ex="");
 };
 
@@ -227,7 +228,7 @@ public:
     CWTPModelNumber() { set_element_type(WTP_BOARD_DATA_MODEL_NUMBER); }
     ~CWTPModelNumber(){}
     int Parse(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
 };
 
 class CWTPSerialNumber : public CElement
@@ -238,7 +239,7 @@ public:
     CWTPSerialNumber(){ set_element_type(WTP_BOARD_DATA_SERIAL_NUMBER); }
     ~CWTPSerialNumber(){}
     int Parse(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
 };
 
 class CWTPBoardId : public CElement
@@ -249,7 +250,7 @@ public:
     CWTPBoardId(){ set_element_type(WTP_BOARD_DATA_BOARD_ID); }
     ~CWTPBoardId(){}
     int Parse(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
 };
 
 class CWTPBoardRevision :  public CElement
@@ -260,7 +261,7 @@ public:
     CWTPBoardRevision(){ set_element_type(WTP_BOARD_DATA_BOARD_REVISION); }
     ~CWTPBoardRevision(){}
     int Parse(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
 };
 
 class CWTPBoardMacAddress :  public CElement
@@ -271,7 +272,7 @@ public:
     CWTPBoardMacAddress(){ set_element_type(WTP_BOARD_DATA_MAC_ADDRESS); }
     ~CWTPBoardMacAddress(){}
     int Parse(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
 };
 
 class CAPLanIPTlv : public CElement
@@ -280,7 +281,7 @@ public:
     CAPLanIPTlv(){ set_element_type(VS_ELEMENT_APLANIP_TLV); }
     ~CAPLanIPTlv(){}
     int Parse(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
 private:
     uint8_t ip_type;
     uint32_t ap_lanip;
@@ -316,7 +317,7 @@ public:
     ~CWTPDescriptorHardwareVersionTlv(){}
 
     int Parse(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
 };
 
 class CWTPDescriptorSoftwareVersionTlv : public CElement
@@ -332,7 +333,7 @@ public:
     ~CWTPDescriptorSoftwareVersionTlv(){}
 
     int Parse(CBuffer &buffer);
-    int SaveTo(string &str);
+    int SaveTo(string &str, string ex="");
 };
 
 class CVSRadioConfTlv : public CElement
@@ -376,7 +377,52 @@ public:
     ~CVSRadioConfTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
+};
+
+class CVSVlanConfTlv : public CElement
+{
+private:
+    uint8_t  radio_id;
+    uint8_t  wlan_id;
+    uint32_t vlan_id;
+    uint16_t sta_isolate;
+    uint8_t  mac_filter_rules;
+    uint16_t max_stas;
+    uint8_t  portal_enable;
+    uint32_t url_size;
+    string   url;
+    uint8_t  tunnel_enable;
+    uint32_t ssid_up_traffic;
+    uint32_t ssid_down_traffic;
+    uint32_t user_up_traffic;
+    uint32_t user_down_traffic;
+
+    // 0 ---> gb2312  1 ---> utf8
+    uint8_t  essid_encode;
+public:
+    CVSVlanConfTlv()
+    {
+        set_element_type(VS_ELEMENT_VLAN_CONF);
+        radio_id = 0;
+        wlan_id = 0;
+        vlan_id = 0;
+        sta_isolate = 0;
+        mac_filter_rules = 0;
+        max_stas = 0;
+        portal_enable = 0;
+        url_size = 0;
+        tunnel_enable = 0;
+        ssid_up_traffic = 0;
+        ssid_down_traffic = 0;
+        user_up_traffic = 0;
+        user_down_traffic = 0;
+        essid_encode = 0;
+    }
+    ~CVSVlanConfTlv(){}
+
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSAPSpaceInfoTlv : public CElement
@@ -393,7 +439,7 @@ public:
     ~CVSAPSpaceInfoTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSABPRadioConfTlv : public CElement
@@ -415,7 +461,7 @@ public:
     ~CVSABPRadioConfTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSRadioProbeConfTlv : public CElement
@@ -437,7 +483,7 @@ public:
     ~CVSRadioProbeConfTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSEchoConfTlv : public CElement
@@ -457,7 +503,7 @@ public:
     ~CVSEchoConfTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSTrafficStaticsTlv : public CElement
@@ -483,7 +529,7 @@ public:
     ~CVSTrafficStaticsTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSPacketPowerConfTlv : public CElement
@@ -507,7 +553,7 @@ public:
     ~CVSPacketPowerConfTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSChannelReuseConfTlv : public CElement
@@ -527,7 +573,7 @@ public:
     ~CVSChannelReuseConfTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CImageIDDataDevModelTlv : public CElement
@@ -542,7 +588,7 @@ public:
     ~CImageIDDataDevModelTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex = "");
 };
 
 class CImageIDDataSoftwareVersionTlv : public CElement
@@ -557,7 +603,7 @@ public:
     ~CImageIDDataSoftwareVersionTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 class CImageIDDataFileNameTlv : public CElement
 {
@@ -571,7 +617,7 @@ public:
     ~CImageIDDataFileNameTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CImageIDDataFileServerTlv : public CElement
@@ -586,7 +632,7 @@ public:
     ~CImageIDDataFileServerTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CImageIDDataDownloadTypeTlv : public CElement
@@ -601,7 +647,7 @@ public:
     ~CImageIDDataDownloadTypeTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CImageIDDataFtpUserNameTlv : public CElement
@@ -616,7 +662,7 @@ public:
     ~CImageIDDataFtpUserNameTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CImageIDDataFtpPasswordTlv : public CElement
@@ -631,7 +677,7 @@ public:
     ~CImageIDDataFtpPasswordTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CImageIDDataFtpPathTlv : public CElement
@@ -646,7 +692,7 @@ public:
     ~CImageIDDataFtpPathTlv(){}
 
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CWpaMiniTlv : public CMiniElement
@@ -726,7 +772,7 @@ class CVSActlUserInfoPktTlv : public CElement
 {
 private:
     uint32_t pkt_id;
-    uint8_t  pkt_type;
+    uint8_t  pkt_type;     // 1---主动发送  2---发送响应
     uint8_t  msg_type;
     uint8_t  sub_msg_type;
     uint8_t  sta_ip_type;
@@ -760,6 +806,11 @@ public:
         wlan_id = 0;
     }
     ~CVSActlUserInfoPktTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex="");
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSMcastEnhanceTlv : public CElement
@@ -781,6 +832,9 @@ public:
         broadcast_timeout = 0;
     }
     ~CVSMcastEnhanceTlv(){}
+
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSRadio11ACConfTlv : public CElement
@@ -853,6 +907,9 @@ public:
         urllen = 0;
     }
     ~CVSWxAuthInfoTlv(){}
+
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSWlanInfoTlv : public CElement
@@ -870,6 +927,9 @@ public:
         wds_enable = 0;
     }
     ~CVSWlanInfoTlv(){}
+
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSReverseSSHTlv : public CElement
@@ -954,7 +1014,7 @@ public:
     }
     ~CVSNtpServerConfTlv(){}
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CPortalCustom : public CElement
@@ -975,7 +1035,7 @@ public:
     }
     ~CPortalCustom(){}
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSPortalCustomConfTlv : public CElement
@@ -992,7 +1052,7 @@ public:
     }
     ~CVSPortalCustomConfTlv(){}
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class  CVSTimeStampConfTlv : public CElement
@@ -1007,7 +1067,7 @@ public:
     }
     ~CVSTimeStampConfTlv(){}
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSByPassConfTlv : public CElement
@@ -1022,7 +1082,7 @@ public:
     }
     ~CVSByPassConfTlv(){}
     int Assemble(CBuffer &buffer);
-    int LoadFrom(kvlist &kv, string ex);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CAccessControl
@@ -1458,8 +1518,8 @@ public:
 class CVSStationIPAddrTlv : public CElement
 {
 private:
-    uint8_t  ip_type;
-    uint32_t ip_addr[4];
+    uint8_t ip_type;
+    uint8_t ip_addr[16];
 public:
     CVSStationIPAddrTlv()
     {
@@ -1468,6 +1528,9 @@ public:
         bzero(ip_addr, sizeof(ip_addr));
     }
     ~CVSStationIPAddrTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
 };
 
 class CVSReportStaInfoByMacTlv : public CElement
@@ -1501,8 +1564,8 @@ private:
     uint32_t pkt_id;
     uint8_t  pkt_type;
     uint8_t  msg_type;
-    uint32_t user_name_len;
-    string   user_name;
+    uint32_t user_role_len;
+    string   user_role;
     uint8_t  user_ip_type;
     uint8_t  user_ip[16];
     uint8_t  mac_len;
@@ -1524,7 +1587,7 @@ public:
         pkt_id = 0;
         pkt_type = 0;
         msg_type = 0;
-        user_name_len = 0;
+        user_role_len = 0;
         user_ip_type = 0;
         bzero(user_ip, sizeof(user_ip));
         mac_len = 0;
@@ -1541,12 +1604,15 @@ public:
         wlan_id = 0;
     }
     ~CActlStaInfo(){}
+
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
 };
 
 class CVSActlReportStaInfoTlv : public CElement
 {
 private:
-    uint32_t count;
+    uint8_t count;
     vector<CActlStaInfo> sta_infos;
 public:
     CVSActlReportStaInfoTlv()
@@ -1555,6 +1621,9 @@ public:
         count = 0;
     }
     ~CVSActlReportStaInfoTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
 };
 
 class CActlStaStateTlv : public CElement
@@ -1598,6 +1667,9 @@ public:
         ssid_len = 0;
     }
     ~CActlStaStateTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
 };
 
 class CVSActlReportStaStateTlv : public CElement
@@ -1612,6 +1684,9 @@ public:
         count = 0;
     }
     ~CVSActlReportStaStateTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
 };
 
 class CVSReportAPInfoTlv : public CElement

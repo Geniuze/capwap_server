@@ -55,7 +55,7 @@ static void client_udp_read_cb(struct uloop_fd *fd, unsigned int events)
     }while(1);
 
     ret = recv(fd->fd, buf, buf_size, 0);
-    dlog(LOG_DEBUG, "%s.%d read %d buf_size %d", __func__, __LINE__, ret, buf_size);
+
     capwap_read_cb(cl, buf, ret);
 
     SAFE_FREE(buf);
@@ -82,11 +82,11 @@ static size_t client_udp_write(struct client *cl, char *buf, size_t len)
 static void client_ustream_read_cb(struct ustream *us, int bytes)
 {
     struct client *cl = container_of(us, struct client, sfd.stream);
-    int len = 0;
+    size_t len = 0;
     char *buf = NULL;
     uint32_t Identify, Length;
     do {
-        buf = ustream_get_read_buf(us, &len);
+        buf = ustream_get_read_buf(us, (int*)&len);
 
         if ( len < 8 ) break;
 

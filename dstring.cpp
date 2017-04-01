@@ -52,6 +52,11 @@ string toString(uint16_t value)
     return ss.str();
 }
 
+string toString(bool value)
+{
+    return toString(value?1:0);
+}
+
 uint8_t toInt8(string value)
 {
     stringstream ss;
@@ -124,7 +129,7 @@ vector<string> split(string &str, string d)
 
 int format_macaddr(string &mac)
 {
-    for (int i=0; i<mac.length(); i++)
+    for (size_t i=0; i<mac.length(); i++)
     {
         if ((mac[i] >= 'a') && mac[i] <= 'z')
             mac[i] -= ('a' - 'A');
@@ -132,4 +137,19 @@ int format_macaddr(string &mac)
             mac[i] = '-';
     }
     return 0;
+}
+
+string toUpper(string src)
+{
+    string dst = src;
+    for (size_t i=0; i<dst.size(); i++)
+    {
+        if (dst[i] >= 'a' && dst[i] <= 'z')
+            dst[i] -= ('a'-'A');
+    }
+    return dst;
+}
+string toUpper(const char *src)
+{
+    return toUpper(string(src));
 }

@@ -18,6 +18,11 @@
 #define RADIO_5G_LIST "radio_5g_list"
 #define WLAN_LIST "wlan_list"
 #define WLAN_SECURE_LIST "wlan_secure_list"
+#define WP_LIST "wp_list"
+#define LAN_PORTAL_LIST "lan_portal_list"
+#define RFG_LIST "rfg_list"
+#define RATE_SET_LIST "rate_set_list"
+#define PORTAL_CUSTOM_LIST "portal_custom_list"
 
 #define RADIO_TYPE_11B 0x01
 #define RADIO_TYPE_11A 0x02
@@ -96,7 +101,8 @@ enum
 #define DB_STRING_LOW_SIGNAL_THRESHOLD "sta_low_signal_threshold"
 #define DB_STRING_BY_PASS_ENABLE "sta_by_pass_enable"
 #define DB_STRING_WIRELESS_POSITION_NAME "wp_name"
-#define DB_STRING_SPECTNUM_NAME "spectnum_name"
+#define DB_STRING_RFG_STRATEGY_NAME "rfg_name"
+#define DB_STRING_RATE_SET_STRATEGY_NAME "rate_set_name"
 #define DB_STRING_STATION_DATA_COLLECTION "sta_collection"
 #define DB_STRING_LAN_STRATEGY_NAME "lan_strategy"
 #define DB_STRING_RADIO_2G_STRATEGY_NAME "radio2g_strategy"
@@ -114,7 +120,7 @@ enum
     "create table ["GROUP_LIST"] (" \
     DB_STRING_GROUP_NAME" varchar(64) not null," \
     DB_STRING_STATION_TRAFFIC_ENABLE" int(1) default 0," \
-    DB_STRING_STATION_TRAFFIC_INTERVAL" int(4) default 30" \
+    DB_STRING_STATION_TRAFFIC_INTERVAL" int(4) default 30," \
     DB_STRING_STATION_ROMING_ENABLE" int(1) default 0," \
     DB_STRING_STATION_ROMING_SIGNAL" int(4) default 70," \
     DB_STRING_LOW_SIGNAL_ENABLE" int(1) default 0," \
@@ -125,7 +131,8 @@ enum
     DB_STRING_LOAD_BALANCE_THRESHOLD" int(4) default 0,"          \
     DB_STRING_VLAN_INTER_ID" int(4) default 0,"                  \
     DB_STRING_WIRELESS_POSITION_NAME" varchar(64) default '',"   \
-    DB_STRING_SPECTNUM_NAME" varchar(64) default '',"  \
+    DB_STRING_RFG_STRATEGY_NAME" varchar(64) default '',"  \
+    DB_STRING_RATE_SET_STRATEGY_NAME" varchar(64) default ''," \
     DB_STRING_STATION_DATA_COLLECTION" varchar(64) default '',"  \
     DB_STRING_LAN_STRATEGY_NAME" varchar(64) default '', "  \
     DB_STRING_RADIO_2G_STRATEGY_NAME" varchar(64) default 'default', " \
@@ -152,7 +159,8 @@ enum
     DB_INDEX_LOAD_BALANCE_THRESHOLD,
     DB_INDEX_VLAN_INTER_ID,
     DB_INDEX_WIRELESS_POSITION_NAME,
-    DB_INDEX_SPECTNUM_NAME,
+    DB_INDEX_RFG_STRATEGY_NAME,
+    DB_INDEX_RATE_SET_STRATEGY_NAME,
     DB_INDEX_STATION_DATA_COLLECTION,
     DB_INDEX_LAN_STRATEGY_NAME,
     DB_INDEX_RADIO_2G_STRATEGY_NAME,
@@ -368,6 +376,7 @@ enum
 #define DB_STRING_WLAN_AUTH_TYPE "auth_type"
 #define DB_STRING_WLAN_PORTAL_TYPE "portal_type"
 #define DB_STRING_WLAN_PORTAL_URL "portal_url"
+#define DB_STRING_WLAN_WX_USER "wx_user"
 #define DB_STRING_WLAN_SECURE_STRATEGY "secure_strategy"
 #define DB_STRING_WLAN_HIDE_SSID "hide_ssid"
 #define DB_STRING_WLAN_WDS_ENABLE "wds_enable"
@@ -381,7 +390,9 @@ enum
 #define DB_STRING_WLAN_QOS_ENABLE "qos_enable"
 #define DB_STRING_WLAN_TUNNEL_ENABLE "tunnel_enable"
 #define DB_STRING_WLAN_USER_ISOLATE "user_isolate"
-#define DB_STRING_WLAN_MULTICAST_TO_UNICAST "multi_to_unicast"
+#define DB_STRING_WLAN_MULTICAST_TO_UNICAST_ENABLE "multi_to_unicast"
+#define DB_STRING_WLAN_MULTICAST_TO_UNICAST_MAX_STA "multi_to_unicast_max_sta"
+#define DB_STRING_WLAN_MULTICAST_TO_UNICAST_TIMEOUT "multi_to_unicast_timeout"
 
 #define INIT_WLAN_LIST_TABLE \
     "create table ["WLAN_LIST"] ("                 \
@@ -391,20 +402,23 @@ enum
     DB_STRING_WLAN_AUTH_TYPE" int(1) default 0," \
     DB_STRING_WLAN_PORTAL_TYPE" int(1) default 0," \
     DB_STRING_WLAN_PORTAL_URL" varchar(1024) default ''," \
-    DB_STRING_WLAN_SECURE_STRATEGY" varchar(64) default ''," \
-    DB_STRING_WLAN_HIDE_SSID" int(1) default 0," \
+    DB_STRING_WLAN_WX_USER" varchar(1024) default ''," \
+    DB_STRING_WLAN_SECURE_STRATEGY" varchar(64) default 'open'," \
+    DB_STRING_WLAN_HIDE_SSID" int(1) default 1," \
     DB_STRING_WLAN_WDS_ENABLE" int(1) default 0," \
     DB_STRING_WLAN_VLAN_ID" int(4) default 0," \
     DB_STRING_WLAN_WLAN_ID" int(1) default 0," \
-    DB_STRING_WLAN_MAX_USER" int(4) default 0," \
-    DB_STRING_WLAN_SSID_DOWN" int(4) defualt 0," \
+    DB_STRING_WLAN_MAX_USER" int(4) default 64," \
+    DB_STRING_WLAN_SSID_DOWN" int(4) default 0," \
     DB_STRING_WLAN_SSID_UP" int(4) default 0," \
     DB_STRING_WLAN_USER_DOWN" int(4) default 0," \
     DB_STRING_WLAN_USER_UP" int(4) default 0," \
     DB_STRING_WLAN_QOS_ENABLE" int(1) default 1," \
-    DB_STRING_WLAN_TUNNEL_ENABLE" int(1) default 0," \
+    DB_STRING_WLAN_TUNNEL_ENABLE" int(1) default 1," \
     DB_STRING_WLAN_USER_ISOLATE" int(1) default 0," \
-    DB_STRING_WLAN_MULTICAST_TO_UNICAST" int(1) default 0," \
+    DB_STRING_WLAN_MULTICAST_TO_UNICAST_ENABLE" int(1) default 0," \
+    DB_STRING_WLAN_MULTICAST_TO_UNICAST_MAX_STA" int(4) default 0," \
+    DB_STRING_WLAN_MULTICAST_TO_UNICAST_TIMEOUT" int(4) default 0," \
     "primary key ('"DB_STRING_WLAN_STRATE_NAME"')" \
     ")"
 
@@ -416,6 +430,7 @@ enum
     DB_INDEX_WLAN_AUTH_TYPE,
     DB_INDEX_WLAN_PORTAL_TYPE,
     DB_INDEX_WLAN_PORTAL_URL,
+    DB_INDEX_WLAN_WX_USER,
     DB_INDEX_WLAN_SECURE_STRATEGY,
     DB_INDEX_WLAN_HIDE_SSID,
     DB_INDEX_WLAN_WDS_ENABLE,
@@ -429,37 +444,37 @@ enum
     DB_INDEX_WLAN_QOS_ENABLE,
     DB_INDEX_WLAN_TUNNEL_ENABLE,
     DB_INDEX_WLAN_USER_ISOLATE,
-    DB_INDEX_WLAN_MULTICAST_TO_UNICAST,
+    DB_INDEX_WLAN_BROADCAST_TO_UNICAST_ENABLE,
+    DB_INDEX_WLAN_BROADCAST_TO_UNICAST_MAX_STA,
+    DB_INDEX_WLAN_BROADCAST_TO_UNICAST_TIMEOUT,
 };
 
-#define DB_STRING_WLAN_SECURE_STRATEGY_NAME "wlan_secure_strategy_name"
 #define DB_STRING_WLAN_SECURE_TYPE "wlan_secure_type"
 #define DB_STRING_WLAN_SECURE_KEY_TYPE "wlan_secure_key_type"
 #define DB_STRING_WLAN_SECURE_KEY_INDEX "wlan_secure_key_index"
 #define DB_STRING_WLAN_SECURE_KEY_LENGTH "wlan_secure_key_length"
-#define DB_STRING_WLAN_SECURE_PASSWORD "wlan_secure_password"
+#define DB_STRING_WLAN_SECURE_KEY "wlan_secure_password"
 
 #define INIT_WLAN_SECURE_LIST_TABLE \
     "create table ["WLAN_SECURE_LIST"] (" \
-    DB_STRING_WLAN_SECURE_STRATEGY_NAME" varchar(64) not null," \
+    DB_STRING_WLAN_SECURE_STRATEGY" varchar(64) not null," \
     DB_STRING_WLAN_SECURE_TYPE" int(1) default 0," \
     DB_STRING_WLAN_SECURE_KEY_TYPE" int(1) default 0," \
     DB_STRING_WLAN_SECURE_KEY_INDEX" int(1) default 1," \
     DB_STRING_WLAN_SECURE_KEY_LENGTH" int(4) default 0," \
-    DB_STRING_WLAN_SECURE_PASSWORD" varchar(128) default ''," \
-    "primary key ('"DB_STRING_WLAN_SECURE_STRATEGY_NAME"')" \
+    DB_STRING_WLAN_SECURE_KEY" varchar(128) default ''," \
+    "primary key ('"DB_STRING_WLAN_SECURE_STRATEGY"')"   \
     ")"
 enum
 {
-    DB_INDEX_WLAN_SECURE_LIST_STRATEGY_NAME,
+    DB_INDEX_WLAN_SECURE_LIST_STRATEGY,
     DB_INDEX_WLAN_SECURE_TYPE,
     DB_INDEX_WLAN_SECURE_KEY_TYPE,
     DB_INDEX_WLAN_SECURE_KEY_INDEX,
     DB_INDEX_WLAN_SECURE_KEY_LENGTH,
-    DB_INDEX_WLAN_SECURE_PASSWORD,
+    DB_INDEX_WLAN_SECURE_KEY,
 };
 
-#define WP_LIST "wp_list"
 #define DB_STRING_WP_ENABLE "wp_enable"
 #define DB_STRING_WP_INTERVAL "wp_interval"
 #define DB_STRING_WP_SERVER_IP "wp_server_ip"
@@ -467,13 +482,13 @@ enum
 #define DB_STRING_WP_SCAN_TYPE "wp_scan_type"
 #define DB_STRING_WP_CODE "wp_code"
 #define DB_STRING_WP_PROTO "wp_proto"
-#define DB_STRING_EF_ENABLE "wp_enable"
-#define DB_STRING_EF_INTERVAL "wp_interval"
-#define DB_STRING_EF_SERVER_IP "wp_server_ip"
-#define DB_STRING_EF_SERVER_PORT "wp_server_port"
-#define DB_STRING_EF_SCAN_TYPE "wp_scan_type"
-#define DB_STRING_EF_CODE "wp_code"
-#define DB_STRING_EF_PROTO "wp_proto"
+#define DB_STRING_EF_ENABLE "ef_enable"
+#define DB_STRING_EF_INTERVAL "ef_interval"
+#define DB_STRING_EF_SERVER_IP "ef_server_ip"
+#define DB_STRING_EF_SERVER_PORT "ef_server_port"
+#define DB_STRING_EF_SCAN_TYPE "ef_scan_type"
+#define DB_STRING_EF_CODE "ef_code"
+#define DB_STRING_EF_PROTO "ef_proto"
 #define DB_STRING_WE_AD_INTERVAL "we_ad_interval"
 #define DB_STRING_WE_CHANNEL_2G "we_channel_2g"
 #define DB_STRING_WE_CHANNEL_5G "we_channel_5g"
@@ -524,6 +539,82 @@ enum
     DB_INDEX_WE_CHANNEL_2G,
     DB_INDEX_WE_CHANNEL_5G,
     DB_INDEX_WE_AD_RSSI,
+};
+
+#define DB_STRING_LAN_PORTAL_ENABLE "lan_portal_enable"
+#define DB_STRING_LAN_PORTAL_URL "lan_portal_url"
+#define INIT_LAN_PORTAL_LIST_TABLE \
+    "create table ["LAN_PORTAL_LIST"] (" \
+    DB_STRING_LAN_STRATEGY_NAME" varchar(64) not null,"\
+    DB_STRING_LAN_PORTAL_ENABLE" int(1) default 0," \
+    DB_STRING_LAN_PORTAL_URL" varchar(512) default ''," \
+    "primary key('"DB_STRING_LAN_STRATEGY_NAME"')" \
+    ")"
+enum
+{
+    DB_INDEX_LAN_LIST_STRATEGY_NAME,
+    DB_INDEX_LAN_PORTAL_ENABLE,
+    DB_INDEX_LAN_PORTAL_URL,
+};
+
+#define DB_STRING_RFG_ENABLE "rfg_enable"
+#define DB_STRING_RFG_ASSOC_MAX "rfg_assoc_max"
+#define DB_STRING_RFG_TIMEOUT "rfg_timeout"
+#define DB_STRING_RFG_MAX_STA "rfg_max_sta"
+#define DB_STRING_RFG_METHOD "rfg_method"
+#define INIT_RFG_LIST_TABLE                      \
+    "create table ["RFG_LIST"] ("                \
+    DB_STRING_RFG_STRATEGY_NAME" varchar(64) not null," \
+    DB_STRING_RFG_ENABLE" int(1) default 0,"     \
+    DB_STRING_RFG_ASSOC_MAX" int(1) default 0," \
+    DB_STRING_RFG_TIMEOUT" int(1) default 0," \
+    DB_STRING_RFG_MAX_STA" int(1) default 0," \
+    DB_STRING_RFG_METHOD" int(1) default 0," \
+    "primary key('"DB_STRING_RFG_STRATEGY_NAME"')"      \
+    ")"
+enum
+{
+    DB_INDEX_RFG_LIST_STRATEGY_NAME,
+    DB_INDEX_RFG_ENABLE,
+    DB_INDEX_RFG_ASSOC_MAX,
+    DB_INDEX_RFG_TIMEOUT,
+    DB_INDEX_RFG_MAX_STA,
+    DB_INDEX_RFG_METHOD,
+};
+
+#define DB_STRING_RATE_SET_11A "rate_set_11a"
+#define DB_STRING_RATE_SET_11BG "rate_set_11bg"
+#define DB_STRING_RATE_SET_11N "rate_set_11n"
+#define DB_STRING_RATE_SET_11AC "rate_set_11ac"
+#define INIT_RATE_SET_LIST_TABLE                      \
+    "create table ["RATE_SET_LIST"] ("                       \
+    DB_STRING_RATE_SET_STRATEGY_NAME" varchar(64) not null," \
+    DB_STRING_RATE_SET_11A" char(16) default 0,"            \
+    DB_STRING_RATE_SET_11BG" char(16) default 0,"           \
+    DB_STRING_RATE_SET_11N" char(16) default 0,"       \
+    DB_STRING_RATE_SET_11AC" char(16) default 0,"           \
+    "primary key('"DB_STRING_RATE_SET_STRATEGY_NAME"')"      \
+    ")"
+enum
+{
+    DB_INDEX_RATE_SET_LIST_STRATEGY_NAME,
+    DB_INDEX_RATE_SET_11A,
+    DB_INDEX_RATE_SET_11BG,
+    DB_INDEX_RATE_SET_11N,
+    DB_INDEX_RATE_SET_11AC,
+};
+
+#define DB_STRING_PORTAL_CUSTOM_DATA "portal_custom_data"
+#define INIT_PORTAL_CUSTOM_LIST_TABLE                              \
+    "create table ["PORTAL_CUSTOM_LIST"] ("                          \
+    DB_STRING_PORTAL_CUSTOM_STRATEGY_NAME" varchar(64) not null,"    \
+    DB_STRING_PORTAL_CUSTOM_DATA" varchar(1024) default '',"               \
+    "primary key('"DB_STRING_RATE_SET_STRATEGY_NAME"')"         \
+    ")"
+enum
+{
+    DB_INDEX_PORTAL_CUSTOM_STRATEGY_NAME,
+    DB_INDEX_PORTAL_CUSTOM_DATA,
 };
 
 
@@ -593,5 +684,7 @@ int ap_dev_load_from_db(struct ap_dev *ap, std::vector<std::string> &row);
 string ap_list_str();
 int ap_list_run_count();
 int ap_list_all_count();
+
+bool isOnline(struct ap_dev *ap);
 
 #endif
