@@ -14,6 +14,7 @@
 #define UBUS_STRING_APMAC "apmac"
 #define UBUS_STRING_RADIO "radio"
 #define UBUS_STRING_SOURCE "source"
+#define UBUS_STRING_NUM "num"
 
 #define UBUS_STRING_ID "id"
 #define UBUS_STRING_STATE "status"
@@ -28,6 +29,7 @@ int server_run();
 int ubus_add_station(kvlist &kv);
 int ubus_ack(kvlist &kv);
 int ubus_del_station(kvlist &kv);
+int ubus_multi_add_station(kvlist &kv);
 
 const char * ubus_get_string(struct blob_attr *attr, const char * def = "");
 uint32_t ubus_get_u32(struct blob_attr *attr, uint32_t def = 0);

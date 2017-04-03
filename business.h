@@ -5,6 +5,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "buffer.h"
+
 enum
 {
     CAPWAP_BUSINESS_DISCOVERY,         // AP发现业务处理类型
@@ -34,6 +36,9 @@ enum
 #define AUTH_TYPE_WXAUTH     0x02
 #define AUTH_TYPE_WXLWIFI    0x04
 
+#define BUSINESS_TIMEOUT_INTERVAL 1  // 业务处理存在1ms的间隔
+extern struct uloop_timeout business_timeout;
+
 class CCapwapHeader;
 class CBusiness
 {
@@ -41,51 +46,34 @@ private:
     uint32_t business_type;
     string src_info;
     CCapwapHeader *src_packet;
+    struct ap_dev *ap;
 public:
-    CBusiness()
-    {
-        business_type = CAPWAP_BUSINESS_MAX;
-        src_info = "";
-        src_packet = NULL;
-    }
-    CBusiness(CCapwapHeader *cwheader)
-    {
-        business_type = CAPWAP_BUSINESS_MAX;
-        src_info = "";
-        src_packet = cwheader;
-    }
 
-    CBusiness(CCapwapHeader *cwheader, uint32_t type, string &src)
-    {
-        business_type = type;
-        src_info.assign(src);
-        src_packet = cwheader;
-    }
+    CBusiness();
+    ~CBusiness();
 
-    ~CBusiness(){}
-
-    int Process(struct ap_dev *ap);
-    int business_discovery_process(struct ap_dev *ap);
-    int business_join_process(struct ap_dev *ap);
-    int business_configure_process(struct ap_dev *ap);
-    int business_data_check_process(struct ap_dev *ap);
-    int business_data_transfer_process(struct ap_dev *ap);
-    int business_echo_process(struct ap_dev *ap);
-    int business_init_config_process(struct ap_dev* ap);
-    int business_init_ap_config(struct ap_dev* ap);
-    int business_init_wlan_config(struct ap_dev* ap);
-    int business_ap_config_rsp(struct ap_dev* ap);
-    int business_wlan_config_rsp(struct ap_dev* ap);
-    int business_wtp_event_req(struct ap_dev* ap);
-    int business_add_station(struct ap_dev* ap);
-    int business_multi_add_station(struct ap_dev* ap);
-    int business_del_station(struct ap_dev* ap);
-    int business_ap_info_req(struct ap_dev* ap);
-    int business_ap_leave(struct ap_dev *ap);
-    int business_notify_status(struct ap_dev *ap);
-    int business_multi_process_station(struct ap_dev *ap);
-    int business_config_update_rsp(struct ap_dev *ap);
-    int business_user_info(struct ap_dev *ap);
+    int Process();
+    int business_discovery_process();
+    int business_join_process();
+    int business_configure_process();
+    int business_data_check_process();
+    int business_data_transfer_process();
+    int business_echo_process();
+    int business_init_config_process();
+    int business_init_ap_config();
+    int business_init_wlan_config();
+    int business_ap_config_rsp();
+    int business_wlan_config_rsp();
+    int business_wtp_event_req();
+    int business_add_station();
+    int business_multi_add_station();
+    int business_del_station();
+    int business_ap_info_req();
+    int business_ap_leave();
+    int business_notify_status();
+    int business_multi_process_station();
+    int business_config_update_rsp();
+    int business_user_info();
 
     void set_business_type(int type)
     {
@@ -99,6 +87,10 @@ public:
     {
         src_packet = cwheader;
     }
+    void set_business_ap_dev(struct ap_dev *ap_dev)
+    {
+        ap = ap_dev;
+    }
     uint32_t type()
     {
         return business_type;
@@ -111,6 +103,18 @@ public:
     {
         return src_packet;
     }
+    struct ap_dev* ap_dev()
+    {
+        return ap;
+    }
 };
+
+CBusiness *create_business();
+
+void business_timeout_cb(struct uloop_timeout *timeout);
+
+int add_business(CBusiness *pbusiness);
+int flush_business();
+int flush_business(struct ap_dev *ap);
 
 #endif

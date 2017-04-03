@@ -114,13 +114,19 @@ static int dcac_notify_status(struct ubus_context *ctx, struct ubus_object *obj,
     int err;
     struct blob_attr* tb[NOTIFY_STATUS_MAX] = {NULL};
     struct ap_dev *ap = NULL;
-    CBusiness business;
+    CBusiness *pbusiness = NULL;
     string str;
 
     err = blobmsg_parse(notify_status_policy, NOTIFY_STATUS_MAX, tb, blob_data(msg), blob_len(msg));
     if (0 != err)
     {
         dlog(LOG_ERR, "%s.%d blobmsg_parse error return %d", __FUNC__, __LINE__, err);
+        return -1;
+    }
+
+    pbusiness = create_business();
+    if (NULL == pbusiness)
+    {
         return -1;
     }
 
@@ -145,15 +151,14 @@ static int dcac_notify_status(struct ubus_context *ctx, struct ubus_object *obj,
     str.append(STRING_AP_MAC"="  + ap_mac + ";");
     str.append(STRING_USER_ROLE"=default;");
 
-    business.set_business_type(CAPWAP_BUSINESS_NOTIFY_STATUS);
-    business.set_business_string(str);
+    pbusiness->set_business_type(CAPWAP_BUSINESS_NOTIFY_STATUS);
+    pbusiness->set_business_string(str);
 
     ap = find_ap_dev(ap_mac);
-    if (BUSINESS_SUCCESS != business.Process(ap))
-    {
-        dlog(LOG_ERR, "%s.%d AP %s %s %s:%d Process error!", __FUNC__, __LINE__,
-             ap->hw_addr, ap->lan_ip, ap->wan_ip, ntohs(ap->cl->peer_addr.sin_port));
-    }
+
+    pbusiness->set_business_ap_dev(ap);
+
+    add_business(pbusiness);
 
     return 0;
 }
@@ -246,6 +251,24 @@ int ubus_del_station(kvlist &kv)
     blobmsg_add_string(&b, UBUS_STRING_APMAC, GetValue(kv, STRING_AP_MAC).c_str());
 
     ret = ubus_send_auth("offline", &b);
+    blob_buf_free(&b);
+    return ret;
+}
+
+int ubus_multi_add_station(kvlist &kv)
+{
+    int ret = 0;
+
+    blob_buf_init(&b, 0);
+    blobmsg_add_string(&b, UBUS_STRING_MAC, GetValue(kv, STRING_STA_MAC).c_str());
+    blobmsg_add_string(&b, UBUS_STRING_IP, GetValue(kv, STRING_USER_IP).c_str());
+    blobmsg_add_string(&b, UBUS_STRING_SSID, GetValue(kv, STRING_ESSID).c_str());
+    blobmsg_add_string(&b, UBUS_STRING_RADIO, GetValue(kv, STRING_RADIO_ID).c_str());
+    blobmsg_add_string(&b, UBUS_STRING_APMAC, GetValue(kv, STRING_AP_MAC).c_str());
+    blobmsg_add_string(&b, UBUS_STRING_SOURCE, UBUS_OBJECT_NAME);
+    blobmsg_add_u32(&b, UBUS_STRING_NUM, toInt(GetValue(kv, STRING_COUNT)));
+
+    ret = ubus_send_auth("multi-online", &b);
     blob_buf_free(&b);
     return ret;
 }

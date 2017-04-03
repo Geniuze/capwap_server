@@ -24,6 +24,7 @@ extern "C" {
 #include "dbi.h"
 #include "ap_list.h"
 #include "log.h"
+#include "business.h"
 
 /**
    初始化配置
@@ -66,8 +67,16 @@ int init_db_data()
     DBI::Insert(RADIO_5G_LIST, DB_STRING_RADIO_5G_STRATEGY_NAME, "'default'");
     DBI::Insert(WP_LIST, DB_STRING_WIRELESS_POSITION_NAME, "'default'");
     DBI::Insert(WLAN_LIST, DB_STRING_WLAN_STRATE_NAME","DB_STRING_WLAN_ESSID","DB_STRING_WLAN_WLAN_ID","DB_STRING_WLAN_AUTH_TYPE","DB_STRING_WLAN_PORTAL_URL,
-                "'default','default_ssid',1,1,'http://10.0.3.228/htmls/portal/default.html'");
+                "'default','default_ssid',1,0,'http://10.0.3.228/htmls/portal/default.html'");
     DBI::Insert(WLAN_SECURE_LIST, DB_STRING_WLAN_SECURE_STRATEGY, "'open'");
+    return 0;
+}
+
+int init_business_timeout()
+{
+    business_timeout.cb = business_timeout_cb;
+    uloop_timeout_set(&business_timeout, BUSINESS_TIMEOUT_INTERVAL);
+
     return 0;
 }
 
@@ -79,6 +88,8 @@ int main(int argc, char **argv)
 
     init_db(CAPWAP_SERVER_DB);
     init_db_data();
+
+    init_business_timeout();
 
     server_run();
 

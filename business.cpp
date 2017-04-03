@@ -22,53 +22,95 @@ extern "C" {
 #include "interface.h"
 #include "ubus.h"
 
-int CBusiness::Process(struct ap_dev *ap)
+list<CBusiness*> businesses;
+struct uloop_timeout business_timeout;
+
+CBusiness *create_business()
+{
+    try
+    {
+        return new CBusiness;
+    }
+    catch(...)
+    {
+        dlog(LOG_ERR, "%s.%d alloc memroy error.", __FUNC__, __LINE__);
+        return NULL;
+    }
+    return NULL;
+}
+
+CBusiness::CBusiness()
+{
+    ap = NULL;
+    business_type = CAPWAP_BUSINESS_MAX;
+    src_info = "";
+    src_packet = NULL;
+}
+
+CBusiness::~CBusiness()
+{
+    if (src_packet)
+    {
+        dlog(LOG_DEBUG, "%s.%d [release src_packet] %#x", __FUNC__, __LINE__, src_packet);
+        SAFE_DELETE(src_packet);
+    }
+}
+
+int CBusiness::Process()
 {
     int ret = BUSINESS_FAIL;
+
+
+    if (NULL == ap)
+    {
+        dlog(LOG_ERR, "%s.%d {business error : ap dev is null type %d}",
+             __FUNC__, __LINE__, business_type);
+        return ret;
+    }
 
     switch(business_type)
     {
     case CAPWAP_BUSINESS_DISCOVERY:
-        ret = business_discovery_process(ap);
+        ret = business_discovery_process();
         break;
     case CAPWAP_BUSINESS_JOIN:
-        ret = business_join_process(ap);
+        ret = business_join_process();
         break;
     case CAPWAP_BUSINESS_CONFIGURE:
-        ret = business_configure_process(ap);
+        ret = business_configure_process();
         break;
     case CAPWAP_BUSINESS_DATA_CHECK:
-        ret = business_data_check_process(ap);
+        ret = business_data_check_process();
         break;
     case CAPWAP_BUSINESS_DATA_TRANSFER:
-        ret = business_data_transfer_process(ap);
+        ret = business_data_transfer_process();
         break;
     case CAPWAP_BUSINESS_ECHO:
-        ret = business_echo_process(ap);
+        ret = business_echo_process();
         break;
     case CAPWAP_BUSINESS_INIT_CONFIG:
-        ret = business_init_config_process(ap);
+        ret = business_init_config_process();
         break;
     case CAPWAP_BUSINESS_AP_CONFIG_RSP:
-        ret = business_ap_config_rsp(ap);
+        ret = business_ap_config_rsp();
         break;
     case CAPWAP_BUSINESS_WLAN_CONFIG_RSP:
-        ret = business_wlan_config_rsp(ap);
+        ret = business_wlan_config_rsp();
         break;
     case CAPWAP_BUSINESS_WTP_EVENT_REQ:
-        ret = business_wtp_event_req(ap);
+        ret = business_wtp_event_req();
         break;
     case CAPWAP_BUSINESS_AP_INFO_REQ:
-        ret = business_ap_info_req(ap);
+        ret = business_ap_info_req();
         break;
     case CAPWAP_BUSINESS_AP_LEAVE:
-        ret = business_ap_leave(ap);
+        ret = business_ap_leave();
         break;
     case CAPWAP_BUSINESS_NOTIFY_STATUS:
-        ret = business_notify_status(ap);
+        ret = business_notify_status();
         break;
     case CAPWAP_BUSINESS_CONFIG_UPDATE_RSP:
-        ret = business_config_update_rsp(ap);
+        ret = business_config_update_rsp();
         break;
     default:
         dlog(LOG_ERR, "%s.%d unknown this business-type %d", __FUNC__, __LINE__, business_type);
@@ -78,7 +120,7 @@ int CBusiness::Process(struct ap_dev *ap)
     return ret;
 }
 
-int CBusiness::business_discovery_process(struct ap_dev *ap)
+int CBusiness::business_discovery_process()
 {
     CCapwapDiscoveryRsp *prsp = NULL;
     CBuffer buffer;
@@ -118,7 +160,7 @@ int CBusiness::business_discovery_process(struct ap_dev *ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_join_process(struct ap_dev *ap)
+int CBusiness::business_join_process()
 {
 
     kvlist kv = ParseString(src_info);
@@ -218,7 +260,7 @@ int CBusiness::business_join_process(struct ap_dev *ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_configure_process(struct ap_dev *ap)
+int CBusiness::business_configure_process()
 {
     // configure status req 的内容不需要处理，直接下发分组中的配置
     CCapwapConfigureStatusRsp *prsp = NULL;
@@ -356,7 +398,7 @@ int CBusiness::business_configure_process(struct ap_dev *ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_data_check_process(struct ap_dev *ap)
+int CBusiness::business_data_check_process()
 {
     CCapwapChangeStateRsp *prsp = NULL;
     CBuffer buffer;
@@ -374,7 +416,7 @@ int CBusiness::business_data_check_process(struct ap_dev *ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_data_transfer_process(struct ap_dev *ap)
+int CBusiness::business_data_transfer_process()
 {
     CCapwapDataTransferRsp *prsp = NULL;
     CBuffer buffer;
@@ -399,7 +441,7 @@ int CBusiness::business_data_transfer_process(struct ap_dev *ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_echo_process(struct ap_dev *ap)
+int CBusiness::business_echo_process()
 {
     CCapwapEchoRsp *prsp = NULL;
     CBuffer buffer;
@@ -419,15 +461,15 @@ int CBusiness::business_echo_process(struct ap_dev *ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_init_config_process(struct ap_dev* ap)
+int CBusiness::business_init_config_process()
 {
     dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
 
-    if (BUSINESS_SUCCESS != business_init_ap_config(ap))
+    if (BUSINESS_SUCCESS != business_init_ap_config())
     {
         dlog(LOG_ERR, "%s.%d init ap config error", __FUNC__, __LINE__);
     }
-    if (BUSINESS_SUCCESS != business_init_wlan_config(ap))
+    if (BUSINESS_SUCCESS != business_init_wlan_config())
     {
         dlog(LOG_ERR, "%s.%d init wlan config error", __FUNC__, __LINE__);
     }
@@ -436,7 +478,7 @@ int CBusiness::business_init_config_process(struct ap_dev* ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_init_ap_config(struct ap_dev* ap)
+int CBusiness::business_init_ap_config()
 {
     CCapwapAPConfReq *preq = NULL;
     CBuffer buffer;
@@ -607,7 +649,7 @@ int CBusiness::business_init_ap_config(struct ap_dev* ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_init_wlan_config(struct ap_dev* ap)
+int CBusiness::business_init_wlan_config()
 {
     CCapwapWlanConfigReq *preq = NULL;
     string cond;
@@ -744,18 +786,18 @@ int CBusiness::business_init_wlan_config(struct ap_dev* ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_ap_config_rsp(struct ap_dev* ap)
+int CBusiness::business_ap_config_rsp()
 {
     dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
     return BUSINESS_SUCCESS;
 }
-int CBusiness::business_wlan_config_rsp(struct ap_dev* ap)
+int CBusiness::business_wlan_config_rsp()
 {
     dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_add_station(struct ap_dev *ap)
+int CBusiness::business_add_station()
 {
     kvlist kv = ParseString(src_info);
 
@@ -766,16 +808,41 @@ int CBusiness::business_add_station(struct ap_dev *ap)
     // TODO 发送ubus消息到auth
     return BUSINESS_SUCCESS;
 }
-int CBusiness::business_multi_add_station(struct ap_dev *ap)
+int CBusiness::business_multi_add_station()
 {
+    kvlist kv = ParseString(src_info);
+    uint32_t count = toInt(GetValue(kv, STRING_COUNT));
+    kvlist kv_multi_add;
+    string macs,ssids,ips,radios;
+
     dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
 
-    // TODO 发送ubus消息到auth
+    if (0 == count)
+        return BUSINESS_SUCCESS;
 
+    SetValue(kv_multi_add, STRING_COUNT, toString(count));
+    SetValue(kv_multi_add, STRING_AP_MAC, GetValue(kv, STRING_AP_MAC"0"));
+
+    for (size_t i=0; i<count; i++)
+    {
+        macs.append(GetValue(kv, STRING_STA_MAC + toString(i)) + ";");
+        ssids.append(GetValue(kv, STRING_ESSID + toString(i)) + ";");
+        ips.append(GetValue(kv, STRING_USER_IP + toString(i)) + ";");
+        radios.append(GetValue(kv, STRING_RADIO_ID + toString(i)) + ";");
+    }
+
+    SetValue(kv_multi_add, STRING_STA_MAC, macs);
+    SetValue(kv_multi_add, STRING_ESSID, ssids);
+    SetValue(kv_multi_add, STRING_USER_IP, ips);
+    SetValue(kv_multi_add, STRING_RADIO_ID, radios);
+
+    DumpKv(kv_multi_add);
+
+    ubus_multi_add_station(kv_multi_add);
 
     return BUSINESS_SUCCESS;
 }
-int CBusiness::business_del_station(struct ap_dev *ap)
+int CBusiness::business_del_station()
 {
     kvlist kv = ParseString(src_info);
     dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
@@ -785,7 +852,7 @@ int CBusiness::business_del_station(struct ap_dev *ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_wtp_event_req(struct ap_dev* ap)
+int CBusiness::business_wtp_event_req()
 {
     CCapwapWTPEventReq *preq = (CCapwapWTPEventReq *)packet();
     CCapwapWTPEventRsp *prsp = NULL;
@@ -797,15 +864,15 @@ int CBusiness::business_wtp_event_req(struct ap_dev* ap)
         return BUSINESS_FAIL;
 
     if (preq->add_station.isValid())
-        business_add_station(ap);
+        business_add_station();
     else if (preq->del_station.isValid())
-        business_del_station(ap);
+        business_del_station();
     else if (preq->pay_load.sta_state.isValid())
-        business_multi_add_station(ap);
+        business_multi_add_station();
     else if (preq->pay_load.actl_sta_info.isValid())
-        business_multi_process_station(ap);
+        business_multi_process_station();
     else if (preq->pay_load.actl_user_info.isValid())
-        business_user_info(ap);
+        business_user_info();
     else
     {
         dlog(LOG_ERR, "%s.%d AP %s REQUEST SOMETHING BY WTP EVENT REQUEST BUT NO BUSINESS PROCESS!",
@@ -827,7 +894,7 @@ int CBusiness::business_wtp_event_req(struct ap_dev* ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_ap_info_req(struct ap_dev* ap)
+int CBusiness::business_ap_info_req()
 {
     CCapwapAPInfoRsp *prsp = NULL;
     CBuffer buffer;
@@ -852,7 +919,7 @@ int CBusiness::business_ap_info_req(struct ap_dev* ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_ap_leave(struct ap_dev *ap)
+int CBusiness::business_ap_leave()
 {
     string cond;
     string key_value;
@@ -865,12 +932,15 @@ int CBusiness::business_ap_leave(struct ap_dev *ap)
 
     DBI::Update(AP_LIST, key_value.c_str(), cond.c_str());
 
+    // 清空任务列表中该AP的任务
+    flush_business(ap);
+
     del_ap_dev(ap);
 
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_notify_status(struct ap_dev *ap)
+int CBusiness::business_notify_status()
 {
     CCapwapConfigUpdateReq *preq = NULL;
     CBuffer buffer;
@@ -912,7 +982,7 @@ int CBusiness::business_notify_status(struct ap_dev *ap)
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_multi_process_station(struct ap_dev *ap)
+int CBusiness::business_multi_process_station()
 {
     kvlist kv = ParseString(src_info);
     uint32_t pkt_type;
@@ -936,17 +1006,16 @@ int CBusiness::business_multi_process_station(struct ap_dev *ap)
         ubus_ack(kv_ack);
     }
 
-    // TODO 发送ubus消息到auth
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_config_update_rsp(struct ap_dev *ap)
+int CBusiness::business_config_update_rsp()
 {
     dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
     return BUSINESS_SUCCESS;
 }
 
-int CBusiness::business_user_info(struct ap_dev *ap)
+int CBusiness::business_user_info()
 {
     kvlist kv = ParseString(src_info);
     kvlist kv_ack;
@@ -970,4 +1039,61 @@ int CBusiness::business_user_info(struct ap_dev *ap)
     }
 
     return BUSINESS_SUCCESS;
+}
+
+
+
+
+
+
+
+
+
+
+int add_business(CBusiness *pbusiness)
+{
+    dlog(LOG_DEBUG, "%s.%d {}", __FUNC__, __LINE__);
+    businesses.push_back(pbusiness);
+    return 0;
+}
+int flush_business()
+{
+    dlog(LOG_DEBUG, "%s.%d {}", __FUNC__, __LINE__);
+    while (businesses.size())
+    {
+        CBusiness *pbusiness = businesses.front();
+        SAFE_DELETE(pbusiness);
+        businesses.pop_front();
+    }
+    return 0;
+}
+int flush_business(struct ap_dev *ap)
+{
+    dlog(LOG_DEBUG, "%s.%d {AP %s %s %s:%d}", __FUNC__, __LINE__,
+         ap->hw_addr, ap->lan_ip, ap->wan_ip, ntohs(ap->cl->peer_addr.sin_port));
+    list<CBusiness*>::iterator it = businesses.begin();
+    for (; it != businesses.end(); it++)
+    {
+        if ((*it)->ap_dev() == ap)
+        {
+            list<CBusiness*>::iterator ite = it++;
+            SAFE_DELETE(*ite);
+            businesses.erase(ite);
+        }
+    }
+
+    return 0;
+}
+void business_timeout_cb(struct uloop_timeout *timeout)
+{
+    if (businesses.size())
+    {
+        dlog(LOG_DEBUG, "%s.%d {}", __FUNC__, __LINE__);
+        CBusiness *pbusiness = businesses.front();
+        pbusiness->Process();
+        SAFE_DELETE(pbusiness);
+        businesses.pop_front();
+    }
+
+    uloop_timeout_set(&business_timeout, BUSINESS_TIMEOUT_INTERVAL);
 }
