@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 
 #include "buffer.h"
+#include "kvlist.h"
+#include "config_manager.h"
 
 enum
 {
@@ -23,6 +25,11 @@ enum
     CAPWAP_BUSINESS_AP_INFO_REQ,       // ap上报ac地址，cloud地址以及运行模式
     CAPWAP_BUSINESS_AP_LEAVE,          // AP 离线业务处理
     CAPWAP_BUSINESS_NOTIFY_STATUS,     // 下发终端的认证状态
+    CAPWAP_BUSINESS_MODIFY,            // 页面下发修改业务
+    CAPWAP_BUSINESS_ADD_WLAN,         // 页面下发添加wlan业务
+    CAPWAP_BUSINESS_DEL_WLAN,         // 页面下发删除wlan业务
+
+    CAPWAP_BUSINESS_GET_AP_LIST,       // 获取AP列表业务
     CAPWAP_BUSINESS_MAX,               // 业务处理最大值
 };
 enum
@@ -31,10 +38,31 @@ enum
     BUSINESS_FAIL,
 };
 
-#define AUTH_TYPE_FREEAUTH   0x00
-#define AUTH_TYPE_PORTALAUTH 0x01
-#define AUTH_TYPE_WXAUTH     0x02
-#define AUTH_TYPE_WXLWIFI    0x04
+enum
+{
+    ORDER_BY_DEVMODEL,
+    ORDER_BY_APMAC,
+    ORDER_BY_LANIP,
+    ORDER_BY_WANIP,
+    ORDER_BY_SOFTWARE_VERSION,
+    ORDER_BY_GROUP_NAME,
+    ORDER_BY_UP_RATE,
+    ORDER_BY_DOWN_RATE,
+    ORDER_BY_STATE,
+    ORDER_BY_ONLINE_TIME,
+    ORDER_BY_LEAVE_TIME,
+    ORDER_BY_OFFLINE_DURATION,
+};
+
+enum
+{
+    COND_KEY_WANIP,
+    COND_KEY_LANIP,
+    COND_KEY_APMAC,
+    COND_KEY_DEVMD,
+    COND_KEY_SOFTW,
+    COND_KEY_LOCATION,
+};
 
 #define BUSINESS_TIMEOUT_INTERVAL 1  // 业务处理存在1ms的间隔
 extern struct uloop_timeout business_timeout;
@@ -47,6 +75,9 @@ private:
     string src_info;
     CCapwapHeader *src_packet;
     struct ap_dev *ap;
+    kvlist ret_info;
+    struct ConfigItem ci;
+
 public:
 
     CBusiness();
@@ -74,12 +105,15 @@ public:
     int business_multi_process_station();
     int business_config_update_rsp();
     int business_user_info();
+    int business_modify();
+    int business_add_wlan();
+    int business_del_wlan();
 
     void set_business_type(int type)
     {
         business_type = type;
     }
-    void set_business_string(string &src)
+    void set_business_string(string src)
     {
         src_info.assign(src);
     }
@@ -90,6 +124,10 @@ public:
     void set_business_ap_dev(struct ap_dev *ap_dev)
     {
         ap = ap_dev;
+    }
+    void set_business_config_item(struct ConfigItem &ci)
+    {
+        this->ci = ci;
     }
     uint32_t type()
     {
@@ -106,6 +144,14 @@ public:
     struct ap_dev* ap_dev()
     {
         return ap;
+    }
+    kvlist ret()
+    {
+        return ret_info;
+    }
+    struct ConfigItem get_business_config_item()
+    {
+        return ci;
     }
 };
 

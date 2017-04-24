@@ -14,6 +14,7 @@ using namespace std;
 #include "capwap_vselement.h"
 #include "buffer.h"
 #include "dstring.h"
+#include "jsoncpp/json.h"
 
 
 int CElement::skipEH(CBuffer &buffer)
@@ -260,9 +261,9 @@ int CAPLanIPTlv::SaveTo(string &str, string ex)
     snprintf(mac, sizeof(mac), "%02X-%02X-%02X-%02X-%02X-%02X",
              ap_mac[0], ap_mac[1], ap_mac[2], ap_mac[3], ap_mac[4], ap_mac[5]);
 
-    str.append(STRING_LAN_IPADDR_TYPE"=" + toString(ip_type) + ";");
+    // str.append(STRING_LAN_IPADDR_TYPE"=" + toString(ip_type) + ";");
     str.append(STRING_LAN_IPADDR"=" + toString(ip) + ";");
-    str.append(STRING_AP_MAC_LEN"=" + toString(ap_mac_len) + ";");
+    // str.append(STRING_AP_MAC_LEN"=" + toString(ap_mac_len) + ";");
     str.append(STRING_AP_MAC"=" + toString(mac) + ";");
 
     return 0;
@@ -283,8 +284,9 @@ int CAPTransConfTlv::LoadFrom(kvlist &kv,string ex)
     if (!isValid())
         return 0;
 
-    string stype = GetValue(kv, STRING_AP_TRANS_TYPE);
-    trans_type = (uint8_t)toInt(stype);
+    // 本地转发
+    trans_type = 0;
+
     _elength = 1;
     return 0;
 }
@@ -367,19 +369,19 @@ int CVSRadioConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    radio_id = (uint8_t)toInt(GetValue(kv, STRING_RADIO_ID + ex));
-    amsdu = (uint8_t)toInt(GetValue(kv, STRING_A_MSDU + ex));
-    ampdu = (uint8_t)toInt(GetValue(kv, STRING_A_MPDU + ex));
-    radio_type_11nonly = (uint8_t)toInt(GetValue(kv, STRING_11N_ONLY + ex));
-    short_gi = (uint8_t)toInt(GetValue(kv, STRING_SHORT_GI + ex));
-    band_width = (uint8_t)toInt(GetValue(kv, STRING_BAND_WIDTH + ex));
-    max_support_mcs = (uint8_t)toInt(GetValue(kv, STRING_MAX_SUPPORT_MCS + ex));
-    max_mandantory_mcs = (uint8_t)toInt(GetValue(kv, STRING_MAX_MANDANTORY_MCS + ex));
-    tx_antenna = (uint8_t)toInt(GetValue(kv, STRING_TX_ANTENNA + ex));
-    rx_antenna = (uint8_t)toInt(GetValue(kv, STRING_RX_ANTENNA + ex));
-    auto_channel_switch = (uint8_t)toInt(GetValue(kv, STRING_AUTO_CHANNEL_SWITCH + ex));
-    auto_channel_period = (uint16_t)toInt(GetValue(kv, STRING_AUTO_CHANNEL_PERIOD + ex));
-    auto_power_switch = (uint8_t)toInt(GetValue(kv, STRING_AUTO_POWER_SWITCH + ex));
+    radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
+    amsdu = toInt8(GetValue(kv, TO_STR(STRING_RADIO_A_MSDU) + ex));
+    ampdu = toInt8(GetValue(kv, TO_STR(STRING_RADIO_A_MPDU) + ex));
+    radio_type_11nonly = toInt8(GetValue(kv, TO_STR(STRING_RADIO_11NONLY) + ex));
+    short_gi = toInt8(GetValue(kv, TO_STR(STRING_RADIO_SHORT_GI) + ex));
+    band_width = toInt8(GetValue(kv, TO_STR(STRING_RADIO_CHWIDTH) + ex));
+    // max_support_mcs = toInt8(GetValue(kv, STRING_MAX_SUPPORT_MCS + ex));
+    // max_mandantory_mcs = toInt8(GetValue(kv, STRING_MAX_MANDANTORY_MCS + ex));
+    tx_antenna = toInt8(GetValue(kv, TO_STR(STRING_RADIO_SPACE) + ex));
+    rx_antenna = toInt8(GetValue(kv, TO_STR(STRING_RADIO_SPACE) + ex));
+    auto_channel_switch = toInt8(GetValue(kv, TO_STR(STRING_RADIO_AUTO_CHANNEL) + ex));
+    auto_channel_period = toInt16(GetValue(kv, TO_STR(STRING_RADIO_AUTO_CHANNEL_PERIOD) + ex));
+    auto_power_switch = toInt8(GetValue(kv, TO_STR(STRING_RADIO_AUTO_POWER) + ex));
     // reserved 2 bytes
     _elength = 16;
 
@@ -417,21 +419,23 @@ int CVSVlanConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
+    int auth_type = toInt8(GetValue(kv, TO_STR(STRING_WLAN_AUTH_TYPE) + ex));
+
     radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
-    wlan_id = toInt8(GetValue(kv, STRING_WLAN_ID + ex));
-    vlan_id = toInt32(GetValue(kv, STRING_VLAN_ID + ex));
-    sta_isolate = toInt16(GetValue(kv, STRING_STA_ISOLATE + ex));
-    mac_filter_rules = toInt8(GetValue(kv, STRING_MAC_FILTER_RULES + ex)); //
-    max_stas = toInt16(GetValue(kv, STRING_MAX_STATIONS + ex));
-    portal_enable = toInt8(GetValue(kv, STRING_PORTAL_ENABLE + ex));
-    url = GetValue(kv, STRING_PORTAL_URL + ex);
+    wlan_id = toInt8(GetValue(kv, TO_STR(STRING_WLAN_WLAN_ID) + ex));
+    vlan_id = toInt32(GetValue(kv, TO_STR(STRING_WLAN_VLAN_ID) + ex));
+    sta_isolate = toInt16(GetValue(kv, TO_STR(STRING_WLAN_USER_ISOLATE) + ex));
+    mac_filter_rules = toInt8(GetValue(kv, TO_STR(STRING_WLAN_MAC_FILTER_RULES) + ex)); //
+    max_stas = toInt16(GetValue(kv, TO_STR(STRING_WLAN_MAX_USER) + ex));
+    portal_enable = auth_type & AUTH_TYPE_PORTALAUTH;
+    url = GetValue(kv, TO_STR(STRING_WLAN_PORTAL_URL) + ex);
     url_size = url.length();
-    tunnel_enable = toInt8(GetValue(kv, STRING_TUNNEL_ENABLE + ex));
-    ssid_up_traffic = toInt32(GetValue(kv, STRING_SSID_UP + ex));
-    ssid_down_traffic = toInt32(GetValue(kv, STRING_SSID_DOWN + ex));
-    user_up_traffic = toInt32(GetValue(kv, STRING_USER_UP + ex));
-    user_down_traffic = toInt32(GetValue(kv, STRING_USER_DOWN + ex));
-    essid_encode = toInt8(GetValue(kv, STRING_ESSID_ENCODE + ex));
+    tunnel_enable = toInt8(GetValue(kv, TO_STR(STRING_WLAN_TUNNEL_ENABLE) + ex));
+    ssid_up_traffic = toInt32(GetValue(kv, TO_STR(STRING_WLAN_SSID_UP) + ex));
+    ssid_down_traffic = toInt32(GetValue(kv, TO_STR(STRING_WLAN_SSID_DOWN) + ex));
+    user_up_traffic = toInt32(GetValue(kv, TO_STR(STRING_WLAN_USER_UP) + ex));
+    user_down_traffic = toInt32(GetValue(kv, TO_STR(STRING_WLAN_USER_DOWN) + ex));
+    essid_encode = toInt8(GetValue(kv, TO_STR(STRING_WLAN_ESSID_ENCODE) + ex));
 
     _elength = 34 + url_size;
 
@@ -454,7 +458,7 @@ int CVSAPSpaceInfoTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    space = GetValue(kv, STRING_AP_SPACE + ex);
+    space = GetValue(kv, TO_STR(STRING_POSITION) + ex);
     _elength += space.length();
 
     space_len = space.length();
@@ -482,10 +486,10 @@ int CVSABPRadioConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    radio_id = (uint8_t)toInt(GetValue(kv, STRING_RADIO_ID + ex));
-    ack_timeout = toInt(GetValue(kv, STRING_ACK_TIMEOUT + ex));
-    beacon_rate = toInt(GetValue(kv, STRING_BEACON_RATE + ex));
-    protect_mode = (uint8_t)toInt(GetValue(kv, STRING_PROTECT_MODE + ex));
+    radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
+    ack_timeout = toInt(GetValue(kv, TO_STR(STRING_RADIO_RESPONSE_TIMEOUT) + ex));
+    beacon_rate = toInt(GetValue(kv, TO_STR(STRING_RADIO_BEACON_SEND_SPEED) + ex));
+    protect_mode = toInt8(GetValue(kv, TO_STR(STRING_RADIO_PROTECT_MODE) + ex));
 
     _elength = 10;
     return 0;
@@ -510,9 +514,9 @@ int CVSRadioProbeConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    radio_id = (uint8_t)toInt(GetValue(kv, STRING_RADIO_ID + ex));
-    probe_rssi = toInt(GetValue(kv, STRING_PROBE_RSSI + ex));
-    min_contract_rate = toInt(GetValue(kv, STRING_MIN_CONTRACT_RATE + ex));
+    radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
+    probe_rssi = toInt(GetValue(kv, TO_STR(STRING_RADIO_PROBE_SUPPRESSION) + ex));
+    min_contract_rate = toInt(GetValue(kv, TO_STR(STRING_RADIO_MIN_SEND_SPEED) + ex));
 
     _elength = 21;
 
@@ -537,7 +541,7 @@ int CVSEchoConfTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
 
     echo_interval = toInt(GetValue(kv, STRING_ECHO_INTERVAL));
-    echo_timeout_cnt = toInt(GetValue(kv, STRING_ECHO_TIMEOUT_COUNT));
+    echo_timeout_cnt = toInt(GetValue(kv, STRING_ECHO_COUNT));
 
     _elength = 8;
     return 0;
@@ -561,7 +565,7 @@ int CVSTrafficStaticsTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
 
     ts_interval = toInt(GetValue(kv, STRING_TRAFFIC_STATICS_INTERVAL + ex));
-    ts_switch = toInt(GetValue(kv, STRING_TRAFFIC_SWITCH + ex));
+    ts_switch = toInt(GetValue(kv, STRING_TRAFFIC_STATICS_ENABLE + ex));
 
     _elength = 8;
 
@@ -586,10 +590,10 @@ int CVSNtpServerConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    interval = (uint16_t)toInt(GetValue(kv, STRING_NTP_SERVER_INTERVAL + ex));
+    interval = toInt16(GetValue(kv, TO_STR(STRING_NTP_SYNC_INTERVAL) + ex));
     _elength += 2;
 
-    server = GetValue(kv, STRING_NTP_SERVER);
+    server = GetValue(kv, TO_STR(STRING_NTP_SERVER_ADDR) + ex);
     _elength += server.length();
 
     ntp_server_len = server.length();
@@ -615,11 +619,11 @@ int CVSPacketPowerConfTlv::Assemble(CBuffer &buffer)
 }
 int CVSPacketPowerConfTlv::LoadFrom(kvlist &kv, string ex)
 {
-    radio_id = (uint8_t)toInt(GetValue(kv, STRING_RADIO_ID + ex));
-    min_power = (uint8_t)toInt(GetValue(kv, STRING_MIN_POWER + ex));
-    min_throughput_threshold = toInt(GetValue(kv, STRING_MIN_THROUGHPUT_THRESHOLD + ex));
-    min_rate_threshold = toInt(GetValue(kv, STRING_MIN_RATE_THRESHOLD + ex));
-    ppc_enable = (uint8_t)toInt(GetValue(kv, STRING_PPC_ENABLE + ex));
+    radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
+    min_power = toInt8(GetValue(kv, TO_STR(STRING_RADIO_PKT_POWER_MIN_POWER) + ex));
+    min_throughput_threshold = toInt(GetValue(kv, TO_STR(STRING_RADIO_PKT_POWER_MIN_THROUGHPUT_THRESHOLD) + ex));
+    min_rate_threshold = toInt(GetValue(kv, TO_STR(STRING_RADIO_PKT_POWER_MIN_RATE_THRESHOLD) + ex));
+    ppc_enable = toInt8(GetValue(kv, TO_STR(STRING_RADIO_PKT_POWER_ENABLE) + ex));
 
     _elength = 11;
     return 0;
@@ -643,9 +647,9 @@ int CVSChannelReuseConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    radio_id = (uint8_t)toInt(GetValue(kv, STRING_RADIO_ID + ex));
-    cca_adj = (uint8_t)toInt(GetValue(kv, STRING_CCA_ADJ + ex));
-    cca_thr = (uint8_t)toInt(GetValue(kv, STRING_CCA_THR + ex));
+    radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
+    cca_adj = toInt8(GetValue(kv, TO_STR(STRING_RADIO_CCA_ADJ) + ex));
+    cca_thr = toInt8(GetValue(kv, TO_STR(STRING_RADIO_CCA_THR) + ex));
 
     _elength = 3;
 
@@ -654,9 +658,6 @@ int CVSChannelReuseConfTlv::LoadFrom(kvlist &kv, string ex)
 
 int CPortalCustom::Assemble(CBuffer &buffer)
 {
-    if (!isValid())
-        return 0;
-
     // Assemble(buffer); //此消息不是消息元，不可组装头部信息
     buffer.store16(key_len);
     buffer.storerawbytes((uint8_t*)key.c_str(), key_len);
@@ -669,14 +670,11 @@ int CPortalCustom::Assemble(CBuffer &buffer)
 }
 int CPortalCustom::LoadFrom(kvlist &kv, string ex)
 {
-    if (!isValid())
-        return 0;
-
-    key = GetValue(kv, STRING_PORTAL_CUSTOM_KEY + ex);
+    key = GetValue(kv, TO_STR(STRING_PORTAL_CUSTOM_KEY) + ex);
     key_len = key.length();
-    alias = GetValue(kv, STRING_PORTAL_CUSTOM_ALIAS + ex);
+    alias = GetValue(kv, TO_STR(STRING_PORTAL_CUSTOM_ALIAS) + ex);
     alias_len = alias.length();
-    value = GetValue(kv, STRING_PORTAL_CUSTOM_VALUE + ex);
+    value = GetValue(kv, TO_STR(STRING_PORTAL_CUSTOM_VALUE) + ex);
     value_len = value.length();
 
     _elength += 6 + key_len + alias_len + value_len;
@@ -705,12 +703,40 @@ int CVSPortalCustomConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    count = toInt(GetValue(kv, STRING_PORTAL_CUSTOM_COUNT));
     _elength += 4;
 
+    Json::Reader reader;
+    Json::Value value;
+    Json::Value tmp;
+
+    string data = GetValue(kv, TO_STR(STRING_PORTAL_CUSTOM_DATA));
+    if ("" == data)
+    {
+        dlog(LOG_ERR, "%s.%d {portal_custom_data is null}", __FUNC__, __LINE__);
+        return 0;
+    }
+
+    if (!reader.parse(data, tmp))
+    {
+        dlog(LOG_ERR, "%s.%d {JSON PARSE ERROR %s}", __FUNC__, __LINE__, data.c_str());
+        return 0;
+    }
+
+    count = toInt(tmp[TO_STR(STRING_PORTAL_CUSTOM_COUNT)].asString());
+    value = tmp[TO_STR(STRING_PORTAL_CUSTOM_CONTENT)];
+
+    portal_customs.resize(count);
     for (size_t i=0; i<portal_customs.size(); i++)
     {
-        portal_customs[i].LoadFrom(kv, toString(i+1));
+        kvlist kv_akvs;
+        SetValue(kv_akvs, TO_STR(STRING_PORTAL_CUSTOM_KEY) + toString(i),
+                 value[i][TO_STR(STRING_PORTAL_CUSTOM_KEY)].asString());
+        SetValue(kv_akvs, TO_STR(STRING_PORTAL_CUSTOM_ALIAS) + toString(i),
+                 value[i][TO_STR(STRING_PORTAL_CUSTOM_ALIAS)].asString());
+        SetValue(kv_akvs, TO_STR(STRING_PORTAL_CUSTOM_VALUE) + toString(i),
+                 value[i][TO_STR(STRING_PORTAL_CUSTOM_VALUE)].asString());
+
+        portal_customs[i].LoadFrom(kv_akvs, toString(i));
         _elength += portal_customs[i].length();
     }
 
@@ -733,7 +759,7 @@ int CVSTimeStampConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    time_stamp = toInt(GetValue(kv, STRING_TIME_STAMP));
+    time_stamp = time(NULL);
 
     _elength = 4;
 
@@ -756,7 +782,7 @@ int CVSByPassConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    by_pass = toInt8(GetValue(kv, STRING_BY_PASS_ENABLE));
+    by_pass = toInt8(GetValue(kv, TO_STR(STRING_BY_PASS_ENABLE)));
     _elength = 1;
 
     return 0;
@@ -782,10 +808,10 @@ int CVSMcastEnhanceTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
 
     radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
-    wlan_id = toInt8(GetValue(kv, STRING_WLAN_ID + ex));
-    broadcast_enable = toInt16(GetValue(kv, STRING_BROADCAST_TO_UNICAST_ENABLE + ex));
-    broadcast_max_sta = toInt16(GetValue(kv, STRING_BROADCAST_TO_UNICAST_MAX_STA + ex));
-    broadcast_timeout = toInt16(GetValue(kv, STRING_BROADCAST_TO_UNICAST_TIMEOUT + ex));
+    wlan_id = toInt8(GetValue(kv, TO_STR(STRING_WLAN_WLAN_ID) + ex));
+    broadcast_enable = toInt16(GetValue(kv, TO_STR(STRING_WLAN_MULTICAST_TO_UNICAST_ENABLE) + ex));
+    broadcast_max_sta = toInt16(GetValue(kv, TO_STR(STRING_WLAN_MULTICAST_TO_UNICAST_MAX_STA) + ex));
+    broadcast_timeout = toInt16(GetValue(kv, TO_STR(STRING_WLAN_MULTICAST_TO_UNICAST_TIMEOUT) + ex));
 
     _elength = 8;
     return 0;
@@ -810,10 +836,12 @@ int CVSWxAuthInfoTlv::LoadFrom(kvlist &kv, string ex)
 {
     if (!isValid())
         return 0;
-    wlanid = toInt32(GetValue(kv, STRING_WLAN_ID + ex));
+    uint8_t auth_type = toInt8(GetValue(kv, TO_STR(STRING_WLAN_AUTH_TYPE) + ex));
+
+    wlanid = toInt32(GetValue(kv, TO_STR(STRING_WLAN_WLAN_ID) + ex));
     radioid = toInt32(GetValue(kv, STRING_RADIO_ID + ex));
-    wxenable = toInt32(GetValue(kv, STRING_WX_ENABLE + ex));
-    wxurl = GetValue(kv, STRING_WX_URL);
+    wxenable = auth_type & AUTH_TYPE_WXAUTH;
+    // wxurl = GetValue(kv, STRING_WX_URL);
     urllen = wxurl.length();
 
     _elength = 16 + urllen;
@@ -839,8 +867,8 @@ int CVSWlanInfoTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
 
     radio_id = toInt8(GetValue(kv, STRING_RADIO_ID + ex));
-    wlan_id = toInt8(GetValue(kv, STRING_WLAN_ID + ex));
-    wds_enable = toInt8(GetValue(kv, STRING_WDS_ENABLE + ex));
+    wlan_id = toInt8(GetValue(kv, TO_STR(STRING_WLAN_WLAN_ID) + ex));
+    wds_enable = toInt8(GetValue(kv, TO_STR(STRING_WLAN_WDS_ENABLE) + ex));
 
     _elength = 3;
     return 0;
@@ -902,10 +930,10 @@ int CActlStaStateTlv::SaveTo(string &str, string ex)
     str.append(STRING_AP_MAC   + ex + "=" + toString(buf) + ";");
 
     str.append(STRING_USER_ROLE+ ex + "=" + user_role     + ";");
-    str.append(STRING_SESSION_TIME + ex + "=" + toString(session_time) + ";");
+    str.append(STRING_USER_SESSION_TIME + ex + "=" + toString(session_time) + ";");
     str.append(STRING_RADIO_ID + ex + "=" + toString(radio_id) + ";");
-    str.append(STRING_WLAN_ID + ex + "=" + toString(wlan_id) + ";");
-    str.append(STRING_ESSID + ex + "=" + ssid + ";");
+    str.append(TO_STR(STRING_WLAN_WLAN_ID) + ex + "=" + toString(wlan_id) + ";");
+    str.append(TO_STR(STRING_WLAN_ESSID) + ex + "=" + ssid + ";");
 
     return 0;
 }
@@ -930,7 +958,7 @@ int CVSActlReportStaStateTlv::SaveTo(string &str, string ex)
     if (!isValid())
         return 0;
 
-    str.append(STRING_COUNT"=" + toString(count) + ";");
+    str.append(STRING_USER_COUNT"=" + toString(count) + ";");
 
     for (size_t i = 0; i<sta_states.size(); i++)
     {
@@ -1020,9 +1048,9 @@ int CVSActlUserInfoPktTlv::SaveTo(string &str, string ex)
     str.append(STRING_AP_MAC + ex + "=" + buf + ";");
 
     str.append(STRING_USER_ROLE+ ex + "=" + user_role + ";");
-    str.append(STRING_SESSION_TIME + ex + "=" + toString(session_time) + ";");
+    str.append(STRING_USER_SESSION_TIME + ex + "=" + toString(session_time) + ";");
     str.append(STRING_RADIO_ID + ex + "=" + toString(radio_id) + ";");
-    str.append(STRING_WLAN_ID + ex + "=" + toString(wlan_id) + ";");
+    str.append(TO_STR(STRING_WLAN_WLAN_ID) + ex + "=" + toString(wlan_id) + ";");
 
     return 0;
 }
@@ -1092,9 +1120,9 @@ int CVSActlUserInfoPktTlv::LoadFrom(kvlist &kv, string ex)
     user_role = GetValue(kv, STRING_USER_ROLE + ex);
     user_role_len = user_role.length();
 
-    session_time = toInt(GetValue(kv, STRING_SESSION_TIME + ex));
+    session_time = toInt(GetValue(kv, STRING_USER_SESSION_TIME + ex));
     radio_id = toInt(GetValue(kv, STRING_RADIO_ID + ex));
-    wlan_id = toInt(GetValue(kv, STRING_WLAN_ID + ex));
+    wlan_id = toInt(GetValue(kv, TO_STR(STRING_WLAN_WLAN_ID) + ex));
 
     _elength = 36 + user_role_len;
 
@@ -1285,17 +1313,17 @@ int CActlStaInfo::SaveTo(string &str, string ex)
     str.append(STRING_MSG_TYPE + ex + "=" + toString(msg_type) + ";");
     str.append(STRING_USER_ROLE+ ex + "=" + user_role + ";");
 
-    str.append(STRING_IP_TYPE + ex + "=" + toString(user_ip_type) + ";");
+    // str.append(STRING_IP_TYPE + ex + "=" + toString(user_ip_type) + ";");
 
     snprintf(buf, sizeof(buf), IP_ADDR_FMT, IP_ADDR_VAL(user_ip));
     str.append(STRING_USER_IP + ex + "=" + toString(buf) + ";");
 
-    str.append(STRING_MAC_LEN + ex + "=" + toString(mac_len) + ";");
+    // str.append(STRING_MAC_LEN + ex + "=" + toString(mac_len) + ";");
 
     snprintf(buf, sizeof(buf), ETHER_ADDR_FMT, ETHER_ADDR_VAL(mac));
     str.append(STRING_STA_MAC + ex + "=" + toString(buf) + ";");
 
-    str.append(STRING_SESSION_TIME + ex + "=" + toString(acc_session_time) + ";");
+    str.append(STRING_USER_SESSION_TIME + ex + "=" + toString(acc_session_time) + ";");
     str.append(STRING_TX_BYTES_HIGH + ex + "=" + toString(tx_bytes_high) + ";");
     str.append(STRING_TX_BYTES + ex + "=" + toString(tx_bytes) + ";");
     str.append(STRING_RX_BYTES_HIGH + ex + "=" + toString(rx_bytes_high) + ";");
@@ -1304,7 +1332,7 @@ int CActlStaInfo::SaveTo(string &str, string ex)
     str.append(STRING_RX_PAKCETS + ex + "=" + toString(rx_pkts) + ";");
     str.append(STRING_DOWN_CAUSE + ex + "=" + toString(acc_down_cause) + ";");
     str.append(STRING_RADIO_ID + ex + "=" + toString(radio_id) + ";");
-    str.append(STRING_WLAN_ID + ex + "=" + toString(wlan_id) + ";");
+    str.append(TO_STR(STRING_WLAN_WLAN_ID) + ex + "=" + toString(wlan_id) + ";");
 
     return 0;
 }
@@ -1328,7 +1356,7 @@ int CVSActlReportStaInfoTlv::SaveTo(string &str, string ex)
     if (!isValid())
         return 0;
 
-    str.append(STRING_COUNT"=" + toString(count) + ";");
+    str.append(STRING_USER_COUNT"=" + toString(count) + ";");
     for (size_t i=0; i<sta_infos.size(); i++)
     {
         sta_infos[i].SaveTo(str, toString(i));

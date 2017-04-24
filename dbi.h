@@ -13,7 +13,11 @@ public:
 		return sqlite3_open(path, &_db_handle);
 	}
 
-	static int Query(const char * table, const char * field, DBResult & result, const char * cond = NULL) ;
+	//static int Query(const char * table, const char * field, DBResult & result, const char * cond = NULL) ;
+	static int Query(const char * table, const char * field, DBResult & result,
+                     const char * cond = NULL, const char *order_by = NULL,
+                     const char * order = NULL,
+                     int limit = 0, int offset = 0) ;
 
 	static int Insert(const char * table, const char * field, const char * value);
 
@@ -24,8 +28,10 @@ public:
 	static int Close() {
 		return sqlite3_close(_db_handle);
 	}
+    static int Cols(const char *table, string &cols);
 
 	static int exec(const char * sql, char ** errmsg);
+    static int Errmsg(string &err);
 private:
 	static sqlite3 * _db_handle;
 };

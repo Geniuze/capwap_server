@@ -2,6 +2,7 @@
 using namespace std;
 
 #include <list>
+#include <vector>
 
 #include <sqlite3.h>
 #include <sys/types.h>          /* See NOTES */
@@ -25,6 +26,9 @@ extern "C" {
 #include "ap_list.h"
 #include "log.h"
 #include "business.h"
+#include "capwap_state.h"
+#include "dstring.h"
+#include "config_manager.h"
 
 /**
    初始化配置
@@ -54,6 +58,8 @@ int init_db(const char *file)
         DBI::exec(INIT_LAN_PORTAL_LIST_TABLE, &err);
         DBI::exec(INIT_RFG_LIST_TABLE, &err);
         DBI::exec(INIT_RATE_SET_LIST_TABLE, &err);
+        DBI::exec(INIT_NTP_SERVER_LIST_TABLE, &err);
+        DBI::exec(INIT_PORTAL_CUSTOM_LIST_TABLE, &err);
         DBI::Close();
     }
     DBI::Open(file);
@@ -62,13 +68,29 @@ int init_db(const char *file)
 
 int init_db_data()
 {
-    DBI::Insert(GROUP_LIST, DB_STRING_GROUP_NAME, "'default'");
-    DBI::Insert(RADIO_2G_LIST, DB_STRING_RADIO_2G_STRATEGY_NAME, "'default'");
-    DBI::Insert(RADIO_5G_LIST, DB_STRING_RADIO_5G_STRATEGY_NAME, "'default'");
-    DBI::Insert(WP_LIST, DB_STRING_WIRELESS_POSITION_NAME, "'default'");
-    DBI::Insert(WLAN_LIST, DB_STRING_WLAN_STRATE_NAME","DB_STRING_WLAN_ESSID","DB_STRING_WLAN_WLAN_ID","DB_STRING_WLAN_AUTH_TYPE","DB_STRING_WLAN_PORTAL_URL,
-                "'default','default_ssid',1,0,'http://10.0.3.228/htmls/portal/default.html'");
-    DBI::Insert(WLAN_SECURE_LIST, DB_STRING_WLAN_SECURE_STRATEGY, "'open'");
+    string key_value;
+    key_value.append(STRING_STATE"=" + toString(CAPWAP_STATE_QUIT));
+
+    DBI::Insert(TO_STR(GROUP_LIST), STRING_NAME, "'default'");
+    DBI::Insert(TO_STR(RADIO_2G_LIST), STRING_NAME, "'default'");
+    DBI::Insert(TO_STR(RADIO_2G_LIST), STRING_NAME, "'default22'");
+    DBI::Insert(TO_STR(RADIO_5G_LIST), STRING_NAME, "'default'");
+    DBI::Insert(TO_STR(WP_LIST), STRING_NAME, "'default'");
+    DBI::Insert(TO_STR(WLAN_LIST), STRING_INDEX","STRING_NAME","TO_STR(STRING_WLAN_ESSID)","
+                TO_STR(STRING_WLAN_WLAN_ID)","TO_STR(STRING_WLAN_AUTH_TYPE)","TO_STR(STRING_WLAN_PORTAL_URL),
+                "1,'default','default_ssid',1,0,'http://10.0.3.228/htmls/portal/default.html'");
+    DBI::Insert(TO_STR(WLAN_LIST), STRING_INDEX","STRING_NAME","TO_STR(STRING_WLAN_ESSID)","
+                TO_STR(STRING_WLAN_WLAN_ID)","TO_STR(STRING_WLAN_AUTH_TYPE)","TO_STR(STRING_WLAN_PORTAL_URL),
+                "2,'default22','default_ssid22',1,1,'http://10.0.3.228/htmls/portal/default.html'");
+    DBI::Insert(TO_STR(WLAN_LIST), STRING_INDEX","STRING_NAME","TO_STR(STRING_WLAN_ESSID)","
+                TO_STR(STRING_WLAN_WLAN_ID)","TO_STR(STRING_WLAN_AUTH_TYPE)","TO_STR(STRING_WLAN_PORTAL_URL),
+                "3,'default22','default_ssid222',2,0,'http://10.0.3.228/htmls/portal/default.html'");
+    DBI::Insert(TO_STR(WLAN_SECURE_LIST), STRING_NAME, "'open'");
+    DBI::Insert(TO_STR(NTP_SERVER_LIST), STRING_NAME, "'default'");
+    DBI::Insert(TO_STR(PORTAL_CUSTOM_LIST), STRING_NAME","TO_STR(STRING_PORTAL_CUSTOM_DATA),
+                "'default','{\"portal_custom_count\":\"1\",\"portal_custom_content\":[{\"portal_custom_key\":\"extern\",\"portal_custom_alias\":\"aaaaa\",\"portal_custom_value\":\"bbbbb\"}]}'");
+
+    DBI::Update(TO_STR(AP_LIST), key_value.c_str(), NULL);
     return 0;
 }
 

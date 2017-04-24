@@ -127,6 +127,11 @@ enum
     IP_TYPE_IPV6 = 6,
 };
 
+#define AUTH_TYPE_FREEAUTH   0x00
+#define AUTH_TYPE_PORTALAUTH 0x01
+#define AUTH_TYPE_WXAUTH     0x02
+#define AUTH_TYPE_WXLWIFI    0x04
+
 
 class CBuffer;
 
@@ -347,7 +352,7 @@ private:
     uint8_t band_width;
     uint8_t max_support_mcs;
     uint8_t max_mandantory_mcs;
-    uint8_t tx_antenna;
+    uint8_t tx_antenna;   // 1--1*1  2--2*2   3--3*3
     uint8_t rx_antenna;
 
     uint8_t auto_channel_switch;

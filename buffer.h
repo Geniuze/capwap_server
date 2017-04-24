@@ -1,6 +1,9 @@
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
+#include "string.h"
+#include <stdlib.h>
+
 #define SAFE_FREE(buf) \
     if(buf) {             \
         free(buf);        \
@@ -36,6 +39,16 @@ public:
     }
     ~CBuffer(){
         if (_owner) SAFE_FREE(_buffer);
+    }
+    void reset(bool owner = true)
+    {
+        if (_owner) SAFE_FREE(_buffer);
+
+        _owner = owner;
+        _buffer = NULL;
+        _offset = 0;
+        _size = 0;
+        _length = 0;
     }
 
     uint8_t *GetPtr()

@@ -188,6 +188,8 @@ int capwap_state_change_cb(struct client *cl)
     business.set_business_type(CAPWAP_BUSINESS_AP_LEAVE);
     business.set_business_ap_dev(cl->ap);
 
+    cl->ap->state = CAPWAP_STATE_QUIT;
+
     dlog(LOG_ERR, "AP : %s %s %s:%d QUIT", cl->ap->hw_addr,
          cl->ap->lan_ip, cl->ap->wan_ip, ntohs(cl->peer_addr.sin_port));
 

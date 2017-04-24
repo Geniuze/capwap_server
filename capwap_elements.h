@@ -499,7 +499,7 @@ private:
 	uint8_t		radio_id;
 	uint8_t		reserved;
 	uint8_t		current_channel;
-	uint8_t		band_width;
+	uint8_t		band_width; // 1--20M 2--20/40M 3--40-M 4--40+M
 	uint32_t	ti_threshold;
 
 public:
@@ -1413,7 +1413,25 @@ class CUpdateWlanTlv : public CElement
 private:
     uint8_t  radio_id;
     uint8_t  wlan_id;
-    uint16_t capability;
+#ifdef __mips32__
+    union{
+        uint16_t capability;
+        struct{
+            uint16_t reserved1:6;
+            uint16_t qos_enable:1;
+            uint16_t reserved2:9;
+        }s;
+    }u_capability;
+#else
+    union{
+        uint16_t capability;
+        struct{
+            uint16_t reserved2:9;
+            uint16_t qos_enable:1;
+            uint16_t reserved1:6;
+        }s;
+    }u_capability;
+#endif
     uint8_t  key_index;
     uint8_t  key_status;
     uint16_t key_length;
@@ -1424,7 +1442,7 @@ public:
         set_element_type(ELEMENT_UPDATE_WLAN);
         radio_id = 0;
         wlan_id = 0;
-        capability = 0;
+        u_capability.capability = 0;
         key_index = 0;
         key_status = 0;
         key_length = 0;

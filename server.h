@@ -1,6 +1,15 @@
 #ifndef _CAPWAP_SERVER_SERVER_H_
 #define _CAPWAP_SERVER_SERVER_H_
 
+#include <list>
+
+extern "C" {
+#include "libubus.h"
+#include "libubox/blobmsg.h"
+#include "libubox/blobmsg_json.h"
+#include "libubox/ustream.h"
+}
+
 #define LISTEN_PORT 5246
 #define LIMIT_CLIENTS 20
 

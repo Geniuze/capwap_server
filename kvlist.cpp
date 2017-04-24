@@ -26,6 +26,15 @@ kvlist ParseString(string &str, string d, string dd)
     }
     return kv;
 }
+kvlist ParseString(const char *str, const char *d, const char *dd)
+{
+    string s = str;
+    string sd = d;
+    string sdd = dd;
+
+    return ParseString(s, sd, sdd);
+}
+
 string GetValue(kvlist &kv, string key)
 {
     kvlist::iterator it = kv.end();
@@ -65,6 +74,14 @@ int SetValue(kvlist &kv, string key, bool value)
     kv[key] = toString(value);
     return 0;
 }
+int SetValue(kvlist &kv, vector<string> &keys, vector<string> &values)
+{
+    for (size_t i=0; i<keys.size(); i++)
+    {
+        SetValue(kv, keys[i], values[i]);
+    }
+    return 0;
+}
 
 int SetValue(kvlist &kv, const char *key, const char *value)
 {
@@ -72,6 +89,34 @@ int SetValue(kvlist &kv, const char *key, const char *value)
     string svalue = value;
     SetValue(kv, skey, svalue);
     return 0;
+}
+
+int SetValue(kvlist &kv, string key, const char *value)
+{
+    string svalue = value;
+    SetValue(kv, key, svalue);
+    return 0;
+}
+
+int Add(kvlist &kv, kvlist other)
+{
+    kvlist::iterator it= other.begin();
+    for (; it != other.end(); it++)
+    {
+        SetValue(kv, it->first, it->second);
+    }
+    return 0;
+}
+
+string AssembleString(kvlist &kv, string d, string dd)
+{
+    string ret;
+    kvlist::iterator  it = kv.begin();
+    for (; it != kv.end(); it++)
+    {
+        ret.append(it->first + "=" + it->second + ";");
+    }
+    return ret;
 }
 
 int DumpKv(kvlist &kv)

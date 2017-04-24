@@ -613,6 +613,17 @@ int CCapwapWlanConfigReq::Assemble(CBuffer &buffer)
     for (size_t i=0; i<add_wlans.size(); i++)
     {
         add_wlans[i].Assemble(buffer);
+    }
+    for (size_t i=0; i<update_wlans.size(); i++)
+    {
+        update_wlans[i].Assemble(buffer);
+    }
+    for (size_t i=0; i<del_wlans.size(); i++)
+    {
+        del_wlans[i].Assemble(buffer);
+    }
+    for (size_t i=0; i<pay_loads.size(); i++)
+    {
         pay_loads[i].Assemble(buffer);
     }
 
@@ -625,6 +636,17 @@ int CCapwapWlanConfigReq::LoadFrom(kvlist &kv)
     for (size_t i=0; i<add_wlans.size(); i++)
     {
         add_wlans[i].LoadFrom(kv, toString(i));
+    }
+    for (size_t i=0; i<update_wlans.size(); i++)
+    {
+        update_wlans[i].LoadFrom(kv, toString(i));
+    }
+    for (size_t i=0; i<del_wlans.size(); i++)
+    {
+        del_wlans[i].LoadFrom(kv, toString(i));
+    }
+    for (size_t i=0; i<pay_loads.size(); i++)
+    {
         pay_loads[i].LoadFrom(kv, toString(i));
     }
 

@@ -27,7 +27,7 @@ extern "C" {
 
 aplist aps;
 
-struct ap_dev *find_ap_dev(string &mac)
+struct ap_dev *find_ap_dev(string mac)
 {
     aplist::iterator it = aps.end();
     if ((it = aps.find(mac)) != aps.end())
@@ -79,13 +79,11 @@ int ap_dev_set_lan_ip(struct ap_dev *ap, const char *lan_ip)
     SAFE_ARRCOPY(ap->lan_ip, lan_ip);
     return 0;
 }
-/** AP的状态 不允许设置
 int ap_dev_set_state(struct ap_dev *ap, int state)
 {
     ap->state = state;
     return 0;
 }
-*/
 int ap_dev_set_group_name(struct ap_dev *ap, const char *group_name)
 {
     SAFE_ARRCOPY(ap->group_name, group_name);
@@ -180,21 +178,10 @@ int ap_dev_set_radios(struct ap_dev *ap, kvlist &kv)
         if (IsSet(kv, STRING_RADIO_ID + toString(i)))
         {
             int radio_id = toInt(GetValue(kv, STRING_RADIO_ID + toString(i)));
-            string s_radio_type_11a = GetValue(kv, STRING_RADIO_TYPE_11A + toString(i));
-            string s_radio_type_11b = GetValue(kv, STRING_RADIO_TYPE_11B + toString(i));
-            string s_radio_type_11g = GetValue(kv, STRING_RADIO_TYPE_11G + toString(i));
-            string s_radio_type_11n = GetValue(kv, STRING_RADIO_TYPE_11N + toString(i));
 
             ap->max_radios = radio_id;
             ap->radios[i].radio_id = radio_id;
-            if (toInt(s_radio_type_11a) == 1)
-                ap->radios[i].radio_type |= RADIO_TYPE_11A;
-            if (toInt(s_radio_type_11b) == 1)
-                ap->radios[i].radio_type |= RADIO_TYPE_11B;
-            if (toInt(s_radio_type_11g) == 1)
-                ap->radios[i].radio_type |= RADIO_TYPE_11G;
-            if (toInt(s_radio_type_11n) == 1)
-                ap->radios[i].radio_type |= RADIO_TYPE_11N;
+            ap->radios[i].radio_type = toInt(GetValue(kv, TO_STR(STRING_RADIO_RADIO_TYPE) + toString(i)));
 
             dlog(LOG_DEBUG, "MAX_RADIOS %d RADIO_ID %d RADIO_TYPE %d",
                  ap->max_radios, ap->radios[i].radio_id, ap->radios[i].radio_type);

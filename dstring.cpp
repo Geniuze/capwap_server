@@ -126,6 +126,11 @@ vector<string> split(string &str, string d)
     }
     return v;
 }
+vector<string> split(const char *str, const char *d)
+{
+    string s = str;
+    return split(s, string(d));
+}
 
 int format_macaddr(string &mac)
 {
