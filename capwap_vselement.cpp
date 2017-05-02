@@ -530,7 +530,7 @@ int CVSEchoConfTlv::Assemble(CBuffer &buffer)
 
     AssembleEH(buffer);
 
-    buffer.store32(echo_interval);
+    buffer.store32(echo_timeout_interval);
     buffer.store32(echo_timeout_cnt);
 
     return 0;
@@ -540,12 +540,34 @@ int CVSEchoConfTlv::LoadFrom(kvlist &kv, string ex)
     if (!isValid())
         return 0;
 
-    echo_interval = toInt(GetValue(kv, STRING_ECHO_INTERVAL));
+    echo_timeout_interval = toInt(GetValue(kv, STRING_ECHO_INTERVAL));
     echo_timeout_cnt = toInt(GetValue(kv, STRING_ECHO_COUNT));
 
     _elength = 8;
     return 0;
 }
+
+int CVSTrafficStaticsTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive64(tx_speed);
+    buffer.retrive64(rx_speed);
+
+    return 0;
+}
+int CVSTrafficStaticsTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_TX_SPEED"=" + toString(tx_speed) + ";");
+    str.append(STRING_RX_SPEED"=" + toString(rx_speed) + ";");
+
+    return 0;
+}
+
 
 int CVSTrafficStaticsTlv::Assemble(CBuffer &buffer)
 {
@@ -1129,6 +1151,25 @@ int CVSActlUserInfoPktTlv::LoadFrom(kvlist &kv, string ex)
     return 0;
 }
 
+int CImageIDDataDevModelTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    data.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CImageIDDataDevModelTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_DEV_MODEL"=" + data + ";");
+
+    return 0;
+}
 int CImageIDDataDevModelTlv::Assemble(CBuffer &buffer)
 {
     if (!isValid())
@@ -1146,6 +1187,26 @@ int CImageIDDataDevModelTlv::LoadFrom(kvlist &kv, string ex)
 
     data = GetValue(kv, STRING_DEV_MODEL);
     _elength += data.length();
+
+    return 0;
+}
+
+int CImageIDDataSoftwareVersionTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    data.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CImageIDDataSoftwareVersionTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_SOFTWARE_VERSION"=" + data + ";");
 
     return 0;
 }
@@ -1168,6 +1229,26 @@ int CImageIDDataSoftwareVersionTlv::LoadFrom(kvlist &kv, string ex)
     return 0;
 }
 
+int CImageIDDataFileNameTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    data.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CImageIDDataFileNameTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_FILE_NAME"=" + data + ";");
+
+    return 0;
+}
+
 int CImageIDDataFileNameTlv::Assemble(CBuffer &buffer)
 {
     if (!isValid())
@@ -1183,6 +1264,26 @@ int CImageIDDataFileNameTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
     data = GetValue(kv, STRING_FILE_NAME);
     _elength += data.length();
+    return 0;
+}
+
+int CImageIDDataFileServerTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    data.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CImageIDDataFileServerTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_FILE_SERVER"=" + data + ";");
+
     return 0;
 }
 
@@ -1204,6 +1305,26 @@ int CImageIDDataFileServerTlv::LoadFrom(kvlist &kv, string ex)
     return 0;
 }
 
+int CImageIDDataDownloadTypeTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    data.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CImageIDDataDownloadTypeTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_DOWNLOAD_TYPE"=" + data + ";");
+
+    return 0;
+}
+
 int CImageIDDataDownloadTypeTlv::Assemble(CBuffer &buffer)
 {
     if (!isValid())
@@ -1219,6 +1340,25 @@ int CImageIDDataDownloadTypeTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
     data = GetValue(kv, STRING_DOWNLOAD_TYPE);
     _elength += data.length();
+    return 0;
+}
+int CImageIDDataFtpUserNameTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    data.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CImageIDDataFtpUserNameTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_FTP_USER_NAME"=" + data + ";");
+
     return 0;
 }
 
@@ -1239,6 +1379,25 @@ int CImageIDDataFtpUserNameTlv::LoadFrom(kvlist &kv, string ex)
     _elength += data.length();
     return 0;
 }
+int CImageIDDataFtpPasswordTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    data.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CImageIDDataFtpPasswordTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_FTP_PASSWORD"=" + data + ";");
+
+    return 0;
+}
 
 int CImageIDDataFtpPasswordTlv::Assemble(CBuffer &buffer)
 {
@@ -1255,6 +1414,25 @@ int CImageIDDataFtpPasswordTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
     data = GetValue(kv, STRING_FTP_PASSWORD);
     _elength += data.length();
+    return 0;
+}
+int CImageIDDataFtpPathTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    data.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CImageIDDataFtpPathTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_FTP_PATH"=" + data + ";");
+
     return 0;
 }
 
@@ -1361,6 +1539,26 @@ int CVSActlReportStaInfoTlv::SaveTo(string &str, string ex)
     {
         sta_infos[i].SaveTo(str, toString(i));
     }
+
+    return 0;
+}
+
+int CVSResultStrTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    result.assign((const char *)buffer.GetPtr(), _elength);
+    buffer.retriverawbytes(NULL, _elength);
+
+    return 0;
+}
+int CVSResultStrTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    str.append(STRING_RESULT_STR"=" + result + ";");
 
     return 0;
 }

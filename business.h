@@ -13,6 +13,7 @@ enum
 {
     CAPWAP_BUSINESS_DISCOVERY,         // AP发现业务处理类型
     CAPWAP_BUSINESS_JOIN,              // AP加入业务处理类型
+    CAPWAP_BUSINESS_IMAGE_DATA,        // AP升级业务处理类型
     CAPWAP_BUSINESS_CONFIGURE,         // AP请求配置业务处理
     CAPWAP_BUSINESS_DATA_CHECK,        // AP 数据检查状态业务处理
     CAPWAP_BUSINESS_DATA_TRANSFER,     // AP 数据上传业务处理
@@ -29,13 +30,17 @@ enum
     CAPWAP_BUSINESS_ADD_WLAN,         // 页面下发添加wlan业务
     CAPWAP_BUSINESS_DEL_WLAN,         // 页面下发删除wlan业务
 
-    CAPWAP_BUSINESS_GET_AP_LIST,       // 获取AP列表业务
+    CAPWAP_BUSINESS_ECHO_CONFIG,       // 配置echo超时次数及间隔
+    CAPWAP_BUSINESS_TS_CONFIG,         // 配置AP流量上报间隔及开关
+    CAPWAP_BUSINESS_RESET,             // 重启AP状态
+    CAPWAP_BUSINESS_UPGRADE,           // 页面升级业务
     CAPWAP_BUSINESS_MAX,               // 业务处理最大值
 };
 enum
 {
     BUSINESS_SUCCESS,
     BUSINESS_FAIL,
+    BUSINESS_SUCCESS_IMAGE,
 };
 
 enum
@@ -86,6 +91,7 @@ public:
     int Process();
     int business_discovery_process();
     int business_join_process();
+    int business_image_data_process();
     int business_configure_process();
     int business_data_check_process();
     int business_data_transfer_process();
@@ -108,6 +114,11 @@ public:
     int business_modify();
     int business_add_wlan();
     int business_del_wlan();
+    int business_echo_config();
+    int business_ts_config();
+    int business_traffic_statics();
+    int business_reset();
+    int business_upgrade();
 
     void set_business_type(int type)
     {

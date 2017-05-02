@@ -495,14 +495,14 @@ class CVSEchoConfTlv : public CElement
 {
 private:
 
-    uint32_t echo_interval;
+    uint32_t echo_timeout_interval;
     uint32_t echo_timeout_cnt;
 
 public:
     CVSEchoConfTlv()
     {
         set_element_type(VS_ELEMENT_ECHO_INFO_TLV);
-        echo_interval = 0;
+        echo_timeout_interval = 0;
         echo_timeout_cnt = 0;
     }
     ~CVSEchoConfTlv(){}
@@ -533,6 +533,8 @@ public:
     }
     ~CVSTrafficStaticsTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex="");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex="");
 };
@@ -592,6 +594,8 @@ public:
     }
     ~CImageIDDataDevModelTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex = "");
 };
@@ -607,6 +611,8 @@ public:
     }
     ~CImageIDDataSoftwareVersionTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex="");
 };
@@ -621,6 +627,8 @@ public:
     }
     ~CImageIDDataFileNameTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex="");
 };
@@ -636,6 +644,8 @@ public:
     }
     ~CImageIDDataFileServerTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex="");
 };
@@ -651,6 +661,8 @@ public:
     }
     ~CImageIDDataDownloadTypeTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex="");
 };
@@ -666,6 +678,8 @@ public:
     }
     ~CImageIDDataFtpUserNameTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex="");
 };
@@ -681,6 +695,8 @@ public:
     }
     ~CImageIDDataFtpPasswordTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex="");
 };
@@ -696,6 +712,8 @@ public:
     }
     ~CImageIDDataFtpPathTlv(){}
 
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex = "");
     int Assemble(CBuffer &buffer);
     int LoadFrom(kvlist &kv, string ex="");
 };
@@ -1518,6 +1536,9 @@ public:
         set_element_type(VS_ELEMENT_RESULT_TLV);
     }
     ~CVSResultStrTlv(){}
+
+    int Parse(CBuffer &buffer);
+    int SaveTo(string &str, string ex="");
 };
 
 class CVSStationIPAddrTlv : public CElement

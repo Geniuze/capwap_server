@@ -210,6 +210,7 @@ public:
     CAPLanIPTlv ap_lanip;
     CVSStaAuthReqTlv sta_auth_req;          // 应该是SW解析HTTP响应后直接认证成功
     CVSAutoChannelSelectInfoTlv auto_channel_select_info;
+    CVSResultStrTlv result;
 
     //  all
     CVSActlUserInfoPktTlv actl_user_info;

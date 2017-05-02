@@ -6,9 +6,12 @@
 #define UBUS_OBJECT_NAME "capwap_server"
 #define UBUS_OBJECT_AUTH_SERVER "ibox.authd"
 
-#define UBUS_STRING_AP_LIST "ap_list"
 #define UBUS_STRING_NOTIFY_STATUS "notify_status"
 #define UBUS_STRING_OPT "options"
+#define UBUS_STRING_ECHO_CONFIG CAPWAP_ECHO_CONFIG
+#define UBUS_STRING_TS_CONFIG CAPWAP_TS_CONFIG
+#define UBUS_STRING_UPGRADE_CONFIG CAPWAP_UPGRADE_CONFIG
+#define UBUS_STRING_UPGRADE_SERVER CAPWAP_UPGRADE_SERVER
 
 #define UBUS_STRING_TYPE "type"   // add del modify query
 #define UBUS_STRING_TABLE "table"
@@ -24,16 +27,6 @@
 #define UBUS_STRING_RADIO "radio"
 #define UBUS_STRING_SOURCE "source"
 #define UBUS_STRING_NUM "num"
-#define UBUS_STRING_DEVMODEL "dev_model"
-#define UBUS_STRING_LANIP "lan_ip"
-#define UBUS_STRING_WANIP "wan_ip"
-#define UBUS_STRING_SOFTVER "software_version"
-#define UBUS_STRING_GROUP "group_name"
-#define UBUS_STRING_POSITION "position"
-#define UBUS_STRING_UPRATE "up_rate"
-#define UBUS_STRING_DOWNRATE "down_rate"
-#define UBUS_STRING_ONLINE "online_time"
-#define UBUS_STRING_LEAVE "leave_time"
 
 #define UBUS_STRING_ID "id"
 #define UBUS_STRING_STATE "status"
@@ -41,23 +34,17 @@
 #define UBUS_STRING_ACCOUNT "account"
 #define UBUS_STRING_AUTHMODE "auth_mode"
 
-#define UBUS_STRING_COUNT "count"
-#define UBUS_STRING_DATA  "data"
+#define UBUS_STRING_ECHO_INTERVAL STRING_ECHO_INTERVAL
+#define UBUS_STRING_ECHO_COUNT STRING_ECHO_COUNT
+#define UBUS_STRING_TS_ENABLE STRING_TRAFFIC_STATICS_ENABLE
+#define UBUS_STRING_TS_INTERVAL STRING_TRAFFIC_STATICS_INTERVAL
+#define UBUS_STRING_UPGRADE_ENABLE CAPWAP_UPGRADE_CONFIG_ENABLE
 
-#define UBUS_STRING_PAGE_NUMBER "page_number"
-#define UBUS_STRING_PAGE_COUNT "page_count"
-#define UBUS_STRING_ORDER_BY "order_by"
-#define UBUS_STRING_ORDER "order"
-#define UBUS_STRING_COND_KEY "cond_key"
-#define UBUS_STRING_COND_KEY_VALUE "cond_key_value"
-#define UBUS_STRING_COND_GROUP "cond_group"
-#define UBUS_STRING_COND_GROUP_NAME "cond_group_name"
-#define UBUS_STRING_COND_DST_WHITE "cond_dst_white"
-#define UBUS_STRING_COND_DST_WHITE_VALUE "cond_dst_white_value"
-#define UBUS_STRING_COND_STATE "cond_state"
-#define UBUS_STRING_COND_STATE_VALUE "cond_state_value"
-#define UBUS_STRING_COND_UPGRADE "cond_upgrade"
-#define UBUS_STRING_COND_UPGRADE_VALUE "cond_upgrade_value"
+#define UBUS_STRING_UPGRADE_DOWNLOAD_TYPE CAPWAP_UPGRADE_SERVER_TYPE
+#define UBUS_STRING_UPGRADE_FILE_SERVER CAPWAP_UPGRADE_SERVER_ADDR
+#define UBUS_STRING_UPGRADE_FTP_USER_NAME CAPWAP_UPGRADE_SERVER_USERNAME
+#define UBUS_STRING_UPGRADE_FTP_PASSWORD CAPWAP_UPGRADE_SERVER_PASSWORD
+#define UBUS_STRING_UPGRADE_FTP_PATH CAPWAP_UPGRADE_SERVER_PATH
 
 extern struct ubus_context *ubus_ctx;
 extern struct blob_buf b;

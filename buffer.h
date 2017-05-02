@@ -4,6 +4,8 @@
 #include "string.h"
 #include <stdlib.h>
 
+#include "dstring.h"
+
 #define SAFE_FREE(buf) \
     if(buf) {             \
         free(buf);        \
@@ -73,7 +75,7 @@ public:
     }
     void retrive64(uint64_t &value)
     {
-        //value = ntohll(((uint64_t*)GetPtr()));
+        value = ntohll(*((uint64_t*)GetPtr()));
         _offset += 8;
     }
     void retriverawbytes(uint8_t *buf, size_t len)
@@ -102,7 +104,7 @@ public:
     }
     void store64(uint64_t value)
     {
-        //*((uint64_t *)GetPtr()) = htonll(value);
+        *((uint64_t *)GetPtr()) = htonll(value);
         _offset += 8;
         _length += 8;
     }

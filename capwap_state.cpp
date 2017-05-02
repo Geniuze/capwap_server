@@ -67,16 +67,25 @@ static bool capwap_packet_check(CCapwapHeader *cwheader, int state)
         return CAPWAP_PACKET_TYPE_JOIN_REQ == capwap_packet_type(cwheader);
     case CAPWAP_STATE_CONFIGURE:
         return CAPWAP_PACKET_TYPE_CONFIG_STATUS_REQ == capwap_packet_type(cwheader);
+    case CAPWAP_STATE_IMAGE_DATA:
+        return
+            (CAPWAP_PACKET_TYPE_CONFIG_UPDATE_RSP == capwap_packet_type(cwheader)) ||
+            (CAPWAP_PACKET_TYPE_IMAGE_DATA_REQ == capwap_packet_type(cwheader)) ||
+            (CAPWAP_PACKET_TYPE_IMAGE_DATA_RSP == capwap_packet_type(cwheader));
+
     case CAPWAP_STATE_DATA_CHECK:
         return CAPWAP_PACKET_TYPE_CHANGE_STATE_EVENT_REQ == capwap_packet_type(cwheader);
     case CAPWAP_STATE_RUN:
-        return (CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ == capwap_packet_type(cwheader)) ||
+        return
+            (CAPWAP_PACKET_TYPE_DATA_TRANSFER_REQ == capwap_packet_type(cwheader)) ||
             (CAPWAP_PACKET_TYPE_ECHO_REQ == capwap_packet_type(cwheader)) ||
             (CAPWAP_PACKET_TYPE_AP_CONFIG_RSP == capwap_packet_type(cwheader)) ||
             (CAPWAP_PACKET_TYPE_WLAN_CONFIG_RSP == capwap_packet_type(cwheader)) ||
             (CAPWAP_PACKET_TYPE_WTP_EVENT_REQ == capwap_packet_type(cwheader)) ||
             (CAPWAP_PACKET_TYPE_AP_INFO_REQ == capwap_packet_type(cwheader)) ||
             (CAPWAP_PACKET_TYPE_CONFIG_UPDATE_RSP == capwap_packet_type(cwheader));
+    case CAPWAP_STATE_RESET:
+        return CAPWAP_PACKET_TYPE_RESET_RSP == capwap_packet_type(cwheader);
     default:
         dlog(LOG_ERR, "%s.%d error state %d packet type %d",
              __FILE__, __LINE__, state, capwap_packet_type(cwheader));
@@ -111,21 +120,6 @@ static CCapwapHeader * capwap_process_header(CBuffer &buffer, struct ap_dev *ap)
     return ret_capwap_header;
 }
 
-
-// 该函为AP设备刚进入run状态时，需要发送wlanconfig,configupdate..等报文到AP，用以AP设备初始化
-static void capwap_state_run_initial_timeout(struct uloop_timeout *timeout)
-{
-    struct ap_dev * ap = container_of(timeout, struct ap_dev, init_timeout);
-    CBusiness business;
-
-    business.set_business_type(CAPWAP_BUSINESS_INIT_CONFIG);
-    business.set_business_ap_dev(ap);
-    if (BUSINESS_SUCCESS != business.Process())
-    {
-        dlog(LOG_ERR, "%s.%d business %d error", __func__, __LINE__, CAPWAP_BUSINESS_INIT_CONFIG);
-    }
-}
-
 int capwap_state_timeout(struct client *cl)
 {
     if ((NULL == cl->ap) || (cl->ap->state != CAPWAP_STATE_RUN))
@@ -135,7 +129,7 @@ int capwap_state_timeout(struct client *cl)
     }
     if (CAPWAP_STATE_RUN == cl->ap->state)
     {
-        if (MAX_ECHO_TIMEOUT_CNT <= cl->ap->echo_timeout_cnt)
+        if (echo_count <= cl->ap->echo_timeout_cnt)
         {
             cl->close_client_cb(cl);
             return 0;
@@ -143,7 +137,7 @@ int capwap_state_timeout(struct client *cl)
         cl->ap->echo_timeout_cnt++;
         dlog(LOG_ERR, "%s.%d AP %s %s %s:%d timeout %d times!", __FUNC__, __LINE__,
              cl->ap->hw_addr, cl->ap->lan_ip, cl->ap->wan_ip, ntohs(cl->peer_addr.sin_port), cl->ap->echo_timeout_cnt);
-        uloop_timeout_set(&cl->timeout, CAPWAP_ECHO_TIMEOUT);
+        uloop_timeout_set(&cl->timeout, echo_interval sec);
     }
     return 0;
 }
@@ -184,6 +178,11 @@ int capwap_read_cb(struct client *cl, char *buf, size_t len)
 int capwap_state_change_cb(struct client *cl)
 {
     CBusiness business;
+
+    if (NULL == cl->ap)
+        return 0;
+
+    uloop_timeout_cancel(&cl->timeout);
 
     business.set_business_type(CAPWAP_BUSINESS_AP_LEAVE);
     business.set_business_ap_dev(cl->ap);
@@ -253,6 +252,7 @@ int capwap_state_join(struct ap_dev *ap, CBuffer &buffer)
     CCapwapHeader *preq = NULL;
     string str = "";
     CBusiness business;
+    int ret = BUSINESS_SUCCESS;
 
     uloop_timeout_cancel(&ap->cl->timeout);
 
@@ -268,10 +268,16 @@ int capwap_state_join(struct ap_dev *ap, CBuffer &buffer)
     business.set_business_type(CAPWAP_BUSINESS_JOIN);
     business.set_business_string(str);
     business.set_business_ap_dev(ap);
+    ret = business.Process();
 
-    if (BUSINESS_SUCCESS != business.Process())
+    if (BUSINESS_FAIL == ret)
     {
         ap->state = CAPWAP_STATE_QUIT;
+    }
+    else if (BUSINESS_SUCCESS_IMAGE == ret)
+    {
+        ap->state = CAPWAP_STATE_IMAGE_DATA;
+        uloop_timeout_set(&ap->cl->timeout, CAPWAP_JOIN_TIMEOUT);
     }
     else
     {
@@ -285,7 +291,60 @@ int capwap_state_join(struct ap_dev *ap, CBuffer &buffer)
 }
 int capwap_state_image_data(struct ap_dev *ap, CBuffer &buffer)
 {
-    ap->state ++;
+    CCapwapHeader *preq = NULL;
+    string str = "";
+
+    uloop_timeout_cancel(&ap->cl->timeout);
+
+    preq = capwap_process_header(buffer, ap);
+    if (preq == NULL)
+    {
+        ap->state = CAPWAP_STATE_QUIT;
+        return CAPWAP_MESSAGE_DONE;
+    }
+    preq->Parse(buffer);
+    preq->SaveTo(str);
+
+    if (capwap_packet_type(preq) == CAPWAP_PACKET_TYPE_CONFIG_UPDATE_RSP)
+    {
+        dlog(LOG_DEBUG, "%s.%d {recv config update response for image data}", __FUNC__, __LINE__);
+    }
+    else if (capwap_packet_type(preq) == CAPWAP_PACKET_TYPE_IMAGE_DATA_REQ)
+    {
+        CBusiness business;
+
+        business.set_business_type(CAPWAP_BUSINESS_IMAGE_DATA);
+        business.set_business_string(str);
+        business.set_business_ap_dev(ap);
+
+        if (BUSINESS_SUCCESS != business.Process())
+        {
+            ap->state = CAPWAP_STATE_QUIT;
+        }
+        else
+        {
+            uloop_timeout_set(&ap->cl->timeout, CAPWAP_IMAGE_DATA_TIMEOUT);
+        }
+    }
+    else
+    {
+        uloop_timeout_cancel(&ap->cl->timeout);
+
+        CBusiness business;
+        business.set_business_type(CAPWAP_BUSINESS_RESET);
+        business.set_business_ap_dev(ap);
+        business.set_business_string(str);
+
+        if (BUSINESS_SUCCESS != business.Process())
+            ap->state = CAPWAP_STATE_QUIT;
+        else
+        {
+            ap->state = CAPWAP_STATE_RESET;
+            uloop_timeout_set(&ap->cl->timeout, CAPWAP_RESET_TIMEOUT);
+        }
+    }
+
+    SAFE_DELETE(preq);
     return CAPWAP_MESSAGE_DONE;
 }
 int capwap_state_configure(struct ap_dev *ap, CBuffer &buffer)
@@ -394,13 +453,19 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
     case CAPWAP_PACKET_TYPE_ECHO_REQ:
         uloop_timeout_cancel(&ap->cl->timeout);
         pbusiness->set_business_type(CAPWAP_BUSINESS_ECHO);
-        uloop_timeout_set(&ap->cl->timeout, CAPWAP_ECHO_TIMEOUT);
+        uloop_timeout_set(&ap->cl->timeout, echo_interval sec);
 
         if (ap->echo_cnt == 0)
         {
-            ap->init_timeout.cb = capwap_state_run_initial_timeout;
-            uloop_timeout_set(&ap->init_timeout, CAPWAP_INIT_CONFIG_TIMEOUT);
-            ap->echo_cnt++;
+            CBusiness *pbusiness = create_business();
+            if (NULL != pbusiness)
+            {
+                pbusiness->set_business_type(CAPWAP_BUSINESS_INIT_CONFIG);
+                pbusiness->set_business_ap_dev(ap);
+
+                add_business(pbusiness);
+                ap->echo_cnt++;
+            }
         }
         // echo 业务优先处理，不存在处理间隔
         if (BUSINESS_SUCCESS != pbusiness->Process())
@@ -441,14 +506,27 @@ int capwap_state_run(struct ap_dev *ap, CBuffer &buffer)
 }
 int capwap_state_reset(struct ap_dev *ap, CBuffer &buffer)
 {
-    ap->state ++;
+    CCapwapHeader *preq = NULL;
+    string str = "";
+
+    uloop_timeout_cancel(&ap->cl->timeout);
+
+    preq = capwap_process_header(buffer, ap);
+    if (preq == NULL)
+    {
+        ap->state = CAPWAP_STATE_QUIT;
+        return CAPWAP_MESSAGE_DONE;
+    }
+    preq->Parse(buffer);
+    preq->SaveTo(str);
+
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, str.c_str());
+
+    ap->state = CAPWAP_STATE_QUIT;
     return CAPWAP_MESSAGE_DONE;
 }
 int capwap_state_quit(struct ap_dev *ap, CBuffer &buffer)
 {
     ap->state  = CAPWAP_STATE_QUIT;
-
-    //struct client *cl = ap->cl;
-    //cl->us->notify_state(cl->us);
     return CAPWAP_MESSAGE_DONE;
 }

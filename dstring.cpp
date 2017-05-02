@@ -6,7 +6,31 @@ using namespace std;
 #include "dstring.h"
 #include "log.h"
 
+uint64_t ntohll(uint64_t val)
+{
+#ifdef __mips__
+    return val;
+#else
+    return (((uint64_t) ntohl(val)) << 32) + ntohl(val >> 32);
+#endif
+}
+uint64_t htonll(uint64_t val)
+{
+#ifdef __mips__
+    return val;
+#else
+    return (((uint64_t) htonl(val)) << 32) + htonl(val >> 32);
+#endif
+}
+
 string toString(uint32_t value)
+{
+    stringstream ss;
+    ss << dec << value;
+
+    return ss.str();
+}
+string toString(uint64_t value)
 {
     stringstream ss;
     ss << dec << value;

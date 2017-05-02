@@ -35,6 +35,7 @@
 #define RATE_SET_LIST rate_set_list
 #define NTP_SERVER_LIST ntp_server_list
 #define PORTAL_CUSTOM_LIST portal_custom_list
+#define UPGRADE_STRATEGY_LIST upgrade_strategy_list
 
 #define STRING_AP_MAC "ap_mac"
 #define STRING_SERIAL_NUMBER "serial_number"
@@ -54,6 +55,8 @@
 #define STRING_ONLINE_TIME "online_time"
 #define STRING_LEAVE_TIME "offline_time"
 #define STRING_CREATE_TIME "create_time"
+#define STRING_TX_SPEED "tx_speed"
+#define STRING_RX_SPEED "rx_speed"
 
 #define STRING_NAME "name"
 #define STRING_REPORT_STATION_INFO_ENABLE   report_station_info_enable
@@ -228,6 +231,7 @@
 #define STRING_ECHO_COUNT "echo_count"
 #define STRING_TRAFFIC_STATICS_INTERVAL "traffic_statics_interval"
 #define STRING_TRAFFIC_STATICS_ENABLE "traffic_statics_enable"
+#define STRING_UPGRADE_ENABLE "upgrade_enable"
 
 // 升级相关配置宏
 #define STRING_FILE_NAME "file_name"
@@ -239,11 +243,13 @@
 
 // 其它宏
 #define STRING_RESULT_CODE "result_code"
+#define STRING_RESULT_STR "result_str"
 #define STRING_RADIO_ID "radio_id"  // 数据库中无此配置
 #define STRING_COUNT "count"
 
 
 string toString(uint32_t value);
+string toString(uint64_t value);
 string toString(int value);
 string toString(time_t value);
 string toString(char *value);
@@ -260,5 +266,9 @@ vector<string> split(const char *str, const char *d=";");
 int format_macaddr(string &mac);
 string toUpper(string src);
 string toUpper(const char *src);
+
+
+uint64_t htonll(uint64_t val);
+uint64_t ntohll(uint64_t val);
 
 #endif

@@ -333,6 +333,7 @@ public:
 class CCapwapJoinRsp : public CCapwapHeader {
 public:
     CResultTlv result;
+    CImageIdentifierTlv image_identifier;
 public:
     CCapwapJoinRsp()
     {
@@ -775,7 +776,7 @@ public:
 
     // AC ----> AP
     CImageDataTlv image_data;
-    CImageInfoTlv image_info;
+    // CImageInfoTlv image_info;
 public:
     CCapwapImageDataReq()
     {

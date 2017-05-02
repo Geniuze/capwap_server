@@ -229,6 +229,7 @@ int CCapwapJoinRsp::Assemble(CBuffer &buffer)
     CCapwapHeader::Assemble(buffer);
 
     result.Assemble(buffer);
+    image_identifier.Assemble(buffer);
 
     element_end = buffer.GetOffset();
     ReAssembleCtrlHeader(buffer);
@@ -238,6 +239,7 @@ int CCapwapJoinRsp::Assemble(CBuffer &buffer)
 int CCapwapJoinRsp::LoadFrom(kvlist &kv)
 {
     result.LoadFrom(kv);
+    image_identifier.LoadFrom(kv, "");
 
     return 0;
 }
@@ -678,6 +680,79 @@ int CCapwapWlanConfigRsp::LoadFrom(kvlist &kv)
     return 0;
 }
 
+int CCapwapImageDataReq::Parse(CBuffer &buffer)
+{
+    CCapwapHeader::Parse(buffer);
+
+    image_identifier.Parse(buffer);
+    init_download.Parse(buffer);
+    pay_load.Parse(buffer);
+
+    return 0;
+}
+int CCapwapImageDataReq::Assemble(CBuffer &buffer)
+{
+    CCapwapHeader::Assemble(buffer);
+
+    image_data.Assemble(buffer);
+
+    element_end = buffer.GetOffset();
+    ReAssembleCtrlHeader(buffer);
+
+    return 0;
+}
+int CCapwapImageDataReq::SaveTo(string &str)
+{
+    image_identifier.SaveTo(str, "");
+    init_download.SaveTo(str, "");
+    pay_load.SaveTo(str, "");
+
+    return 0;
+}
+int CCapwapImageDataReq::LoadFrom(kvlist &kv)
+{
+    image_data.LoadFrom(kv, "");
+
+    return 0;
+}
+
+int CCapwapImageDataRsp::Parse(CBuffer &buffer)
+{
+    CCapwapHeader::Parse(buffer);
+
+    result.Parse(buffer);
+    pay_load.Parse(buffer);
+
+    return 0;
+}
+int CCapwapImageDataRsp::SaveTo(string &str)
+{
+    result.SaveTo(str, "");
+    pay_load.SaveTo(str, "");
+
+    return 0;
+}
+int CCapwapImageDataRsp::Assemble(CBuffer &buffer)
+{
+    CCapwapHeader::Assemble(buffer);
+
+    result.Assemble(buffer);
+    image_info.Assemble(buffer);
+
+    element_end = buffer.GetOffset();
+    ReAssembleCtrlHeader(buffer);
+
+    return 0;
+}
+int CCapwapImageDataRsp::LoadFrom(kvlist &kv)
+{
+    result.LoadFrom(kv, "");
+    image_info.LoadFrom(kv, "");
+
+    return 0;
+}
+
+
 int CCapwapAPConfRsp::Parse(CBuffer &buffer)
 {
     CCapwapHeader::Parse(buffer);
@@ -748,6 +823,47 @@ int CCapwapWTPEventRsp::Assemble(CBuffer &buffer)
     return 0;
 }
 int CCapwapWTPEventRsp::LoadFrom(kvlist &kv)
+{
+    return 0;
+}
+
+int CCapwapResetReq::Parse(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapResetReq::SaveTo(string &str)
+{
+    return 0;
+}
+int CCapwapResetReq::Assemble(CBuffer &buffer)
+{
+    CCapwapHeader::Assemble(buffer);
+
+    return 0;
+}
+int CCapwapResetReq::LoadFrom(kvlist &kv)
+{
+    return 0;
+}
+
+int CCapwapResetRsp::Parse(CBuffer &buffer)
+{
+    CCapwapHeader::Parse(buffer);
+
+    pay_load.Parse(buffer);
+    return 0;
+}
+int CCapwapResetRsp::SaveTo(string &str)
+{
+    pay_load.SaveTo(str, "");
+
+    return 0;
+}
+int CCapwapResetRsp::Assemble(CBuffer &buffer)
+{
+    return 0;
+}
+int CCapwapResetRsp::LoadFrom(kvlist &kv)
 {
     return 0;
 }
@@ -989,6 +1105,14 @@ CCapwapHeader * capwap_get_packet(int packet_type)
             return new CCapwapConfigUpdateReq;
         case CAPWAP_PACKET_TYPE_CONFIG_UPDATE_RSP:
             return new CCapwapConfigUpdateRsp;
+        case CAPWAP_PACKET_TYPE_IMAGE_DATA_REQ:
+            return new CCapwapImageDataReq;
+        case CAPWAP_PACKET_TYPE_IMAGE_DATA_RSP:
+            return new CCapwapImageDataRsp;
+        case CAPWAP_PACKET_TYPE_RESET_REQ:
+            return new CCapwapResetReq;
+        case CAPWAP_PACKET_TYPE_RESET_RSP:
+            return new CCapwapResetRsp;
         default:
             dlog(LOG_ERR, "%s.%d Unknown this TYPE %d", __FILE__, __LINE__, packet_type);
             break;

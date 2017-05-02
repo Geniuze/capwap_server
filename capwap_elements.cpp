@@ -76,6 +76,8 @@ int CVendorSpecPayLoadTlv::Parse(CBuffer &buffer)
         station_ip.Parse(buffer);
         sta_state.Parse(buffer);
         ap_lanip.Parse(buffer);
+        traffic_statics_conf.Parse(buffer);
+        result.Parse(buffer);
 
         end = buffer.GetOffset();
         if (start == end)
@@ -126,6 +128,8 @@ int CVendorSpecPayLoadTlv::SaveTo(string &str, string ex)
     station_ip.SaveTo(str);
     sta_state.SaveTo(str);
     ap_lanip.SaveTo(str);
+    traffic_statics_conf.SaveTo(str);
+    result.SaveTo(str, "");
 
     return 0;
 }
@@ -1411,6 +1415,41 @@ int CACTimeStampTlv::LoadFrom(kvlist &kv, string ex)
     return 0;
 }
 
+int CImageIdentifierTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    buffer.retrive32(vendor_id);
+
+    dev_model.Parse(buffer);
+    software_version.Parse(buffer);
+    file_name.Parse(buffer);
+    file_server.Parse(buffer);
+    download_type.Parse(buffer);
+    ftp_user_name.Parse(buffer);
+    ftp_password.Parse(buffer);
+    ftp_path.Parse(buffer);
+
+    return 0;
+}
+int CImageIdentifierTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    dev_model.SaveTo(str, ex);
+    software_version.SaveTo(str, ex);
+    file_name.SaveTo(str, ex);
+    file_server.SaveTo(str, ex);
+    download_type.SaveTo(str, ex);
+    ftp_user_name.SaveTo(str, ex);
+    ftp_password.SaveTo(str, ex);
+    ftp_path.SaveTo(str, ex);
+
+    return 0;
+}
+
 int CImageIdentifierTlv::Assemble(CBuffer &buffer)
 {
     if (!isValid())
@@ -1504,5 +1543,59 @@ int CAutoChannelSelectTlv::LoadFrom(kvlist &kv, string ex)
     // select_5g_channel = toInt8(GetValue(kv, STRING_SELECT_5G_CHANNEL));
 
     _elength = 7;
+    return 0;
+}
+
+int CInitDownLoadTlv::Parse(CBuffer &buffer)
+{
+    if (0 != ParseEH(buffer))
+        return 0;
+
+    return 0;
+}
+int CInitDownLoadTlv::SaveTo(string &str, string ex)
+{
+    if (!isValid())
+        return 0;
+    return 0;
+}
+
+int CImageDataTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+    AssembleEH(buffer);
+
+    return 0;
+}
+int CImageDataTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    _elength = 0;
+    return 0;
+}
+
+int CImageInfoTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(file_size);
+    buffer.store64(hash0);
+    buffer.store64(hash1);
+
+    return 0;
+}
+int CImageInfoTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    _elength = 20;
+
     return 0;
 }

@@ -46,16 +46,13 @@ struct ap_dev {
     long long online_time;
     long long leave_time;
     long long create_time;
-
-    struct uloop_timeout init_timeout; // 初始化定时器，收到第一个AP发送的echo报文后，启动定时器发送初始化报文
     int echo_cnt;                      // 用来确定是否第一次接收到该AP的 echo报文 然后进行初始化操作
-
     int max_radios;
     struct {
         int radio_id;
         int radio_type;
     }radios[MAX_RADIOS];
-    int echo_timeout_cnt;
+    uint32_t echo_timeout_cnt;
 };
 
 

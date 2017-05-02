@@ -27,17 +27,16 @@ typedef enum {
     CAPWAP_MESSAGE_INVALID,
 }capwap_message_process_t;
 
-#define MAX_ECHO_TIMEOUT_CNT 3
 #define sec *1000
 
 enum {
     CAPWAP_DISCOVERY_TIMEOUT = 10 sec,
     CAPWAP_JOIN_TIMEOUT = 10 sec,
-    CAPWAP_IMAGE_DATA_TIMEOUT = 10 sec,
+    CAPWAP_IMAGE_DATA_TIMEOUT = 600 sec,
     CAPWAP_CONFIGURE_TIMEOUT = 30 sec,
     CAPWAP_DATA_CHECK_TIMEOUT = 10 sec,
     CAPWAP_DATA_TRANSFER_TIMEOUT = 30 sec,
-    CAPWAP_ECHO_TIMEOUT = 10 sec,
+    CAPWAP_RESET_TIMEOUT = 30 sec,
 
     CAPWAP_INIT_CONFIG_TIMEOUT = 1 sec, // 该定时器为接收到echo后多长时间后发送初始化报文
 };

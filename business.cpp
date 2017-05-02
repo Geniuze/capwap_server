@@ -88,6 +88,9 @@ int CBusiness::Process()
     case CAPWAP_BUSINESS_JOIN:
         ret = business_join_process();
         break;
+    case CAPWAP_BUSINESS_IMAGE_DATA:
+        ret = business_image_data_process();
+        break;
     case CAPWAP_BUSINESS_CONFIGURE:
         ret = business_configure_process();
         break;
@@ -132,6 +135,18 @@ int CBusiness::Process()
         break;
     case CAPWAP_BUSINESS_DEL_WLAN:
         ret = business_del_wlan();
+        break;
+    case CAPWAP_BUSINESS_ECHO_CONFIG:
+        ret = business_echo_config();
+        break;
+    case CAPWAP_BUSINESS_TS_CONFIG:
+        ret = business_ts_config();
+        break;
+    case CAPWAP_BUSINESS_RESET:
+        ret = business_reset();
+        break;
+    case CAPWAP_BUSINESS_UPGRADE:
+        ret = business_upgrade();
         break;
     default:
         dlog(LOG_ERR, "%s.%d unknown this business-type %d", __FUNC__, __LINE__, business_type);
@@ -190,6 +205,7 @@ int CBusiness::business_join_process()
     char wan_ip[32] = {0};
     CCapwapJoinRsp *prsp = NULL;
     CBuffer buffer;
+    int ret = BUSINESS_SUCCESS;
 
     dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
 
@@ -248,6 +264,13 @@ int CBusiness::business_join_process()
     {
         string key_value;
         ap_dev_load_from_db(ap, result[0]);
+        key_value.append(STRING_SERIAL_NUMBER"='" + toString(ap->serial_number) + "',");
+        key_value.append(STRING_WAN_IPADDR"='" + toString(ap->wan_ip) + "',");
+        key_value.append(STRING_LAN_IPADDR"='" + toString(ap->lan_ip) + "',");
+        key_value.append(STRING_DEV_MODEL"='" + toString(ap->dev_model) + "',");
+        key_value.append(STRING_COMPANY_ID"='" + toString(ap->company_id) + "',");
+        key_value.append(STRING_HARDWARE_VERSION"='" + toString(ap->hardware_version) + "',");
+        key_value.append(STRING_SOFTWARE_VERSION"='" + toString(ap->software_version) + "',");
         key_value.append(STRING_LEAVE_TIME"=NULL,");
         key_value.append(STRING_ONLINE_TIME"=" + toString(time(NULL)) + ",");
         key_value.append(STRING_STATE"=" + toString(ap->state) + "");
@@ -266,13 +289,41 @@ int CBusiness::business_join_process()
         return BUSINESS_FAIL;
     }
 
+    kv.clear();
+
     // TODO AP上线升级开关是否开启 版本号对比
 
     prsp->result.setValid(true);
+    if (upgrade_enable) // 开启上线升级
+    {
+        kvlist verlist;
+        string cond;
+        string softversion;
+
+        cond = STRING_DEV_MODEL"='" + toString(ap->dev_model) + "'";
+        verlist = data_line_from_db(TO_STR(UPGRADE_STRATEGY_LIST), cond, "", "");
+        softversion = GetValue(verlist, STRING_SOFTWARE_VERSION);
+
+        if ((softversion != "") && (softversion != ap->software_version))
+        {
+            prsp->image_identifier.setValid(true);
+
+            SetValue(kv, STRING_DEV_MODEL, GetValue(verlist, STRING_DEV_MODEL));
+            SetValue(kv, STRING_SOFTWARE_VERSION, GetValue(verlist, STRING_SOFTWARE_VERSION));
+            SetValue(kv, STRING_FILE_NAME, GetValue(verlist, STRING_FILE_NAME));
+            SetValue(kv, STRING_FILE_SERVER, upgrade_server_addr);
+            SetValue(kv, STRING_DOWNLOAD_TYPE, upgrade_server_type);
+            SetValue(kv, STRING_FTP_USER_NAME, upgrade_server_username);
+            SetValue(kv, STRING_FTP_PASSWORD, upgrade_server_password);
+            SetValue(kv, STRING_FTP_PATH, upgrade_server_path);
+            ret = BUSINESS_SUCCESS_IMAGE;
+        }
+    }
 
     // 设置回复给AP的消息元类型及值
-    kv.clear();
     SetValue(kv, STRING_RESULT_CODE, toString(0));
+
+    DumpKv(kv);
 
     prsp->LoadFrom(kv);
     buffer.extend();
@@ -284,6 +335,52 @@ int CBusiness::business_join_process()
     add_ap_dev(ap);
 
     SAFE_DELETE(prsp);
+    return ret;
+}
+
+int CBusiness::business_image_data_process()
+{
+    CCapwapImageDataRsp *prsp = NULL;
+    CCapwapImageDataReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv;
+
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+
+    // 发送 image data response 报文
+    prsp = (CCapwapImageDataRsp *)capwap_get_packet(CAPWAP_PACKET_TYPE_IMAGE_DATA_RSP);
+    if (prsp == NULL)
+        return BUSINESS_FAIL;
+
+    prsp->result.setValid(true);
+    prsp->image_info.setValid(true);
+
+    SetValue(kv, STRING_RESULT_CODE, toString(0));
+
+    prsp->LoadFrom(kv);
+    buffer.extend();
+    prsp->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char *)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(prsp);
+
+    // 发送 image data request 报文
+    preq = (CCapwapImageDataReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_IMAGE_DATA_REQ);
+    if (preq == NULL)
+        return BUSINESS_FAIL;
+    buffer.reset();
+    kv.clear();
+
+    preq->image_data.setValid(true);
+    preq->LoadFrom(kv);
+    buffer.extend();
+    preq->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char *)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(preq);
+
     return BUSINESS_SUCCESS;
 }
 
@@ -325,8 +422,8 @@ int CBusiness::business_configure_process()
         SetValue(kv, STRING_RADIO_ID + toString(i), toString(radio_id));
     }
     // TODO 设置echo超时的时间和间隔
-    SetValue(kv, STRING_ECHO_INTERVAL, toString(10));
-    SetValue(kv, STRING_ECHO_COUNT, toString(3));
+    SetValue(kv, STRING_ECHO_INTERVAL, toString(echo_interval));
+    SetValue(kv, STRING_ECHO_COUNT, toString(echo_count));
 
     DumpKv(kv);
 
@@ -507,6 +604,9 @@ int CBusiness::business_init_ap_config()
     cond = STRING_NAME"='" + GetValue(kv, TO_STR(STRING_PORTAL_PARAM_CUSTOM_STRATEGY_NAME)) + "'";
     Add(kv, data_line_from_db(TO_STR(PORTAL_CUSTOM_LIST), cond, "", ""));
 
+    SetValue(kv, STRING_TRAFFIC_STATICS_ENABLE, toString(ts_enable));
+    SetValue(kv, STRING_TRAFFIC_STATICS_INTERVAL, toString(ts_interval));
+
     DumpKv(kv);
 
     preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
@@ -532,6 +632,7 @@ int CBusiness::business_init_ap_config()
     preq->pay_load.time_stamp.setValid(true);   // Y
     preq->pay_load.by_pass.setValid(true);      // Y
     preq->pay_load.ntp_server.setValid(true);   // Y
+    preq->pay_load.traffic_statics_conf.setValid(true); // Y
 
     preq->LoadFrom(kv);
     buffer.extend();
@@ -708,6 +809,8 @@ int CBusiness::business_wtp_event_req()
         business_multi_process_station();
     else if (preq->pay_load.actl_user_info.isValid())
         business_user_info();
+    else if (preq->pay_load.traffic_statics_conf.isValid())
+        business_traffic_statics();
     else
     {
         dlog(LOG_ERR, "%s.%d AP %s REQUEST SOMETHING BY WTP EVENT REQUEST BUT NO BUSINESS PROCESS!",
@@ -994,6 +1097,146 @@ int CBusiness::business_del_wlan()
     SAFE_DELETE(preq);
     return BUSINESS_SUCCESS;
 }
+int CBusiness::business_echo_config()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+    CCapwapAPConfReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv;
+
+    preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    SetValue(kv, STRING_ECHO_INTERVAL, toString(echo_interval));
+    SetValue(kv, STRING_ECHO_COUNT, toString(echo_count));
+
+    preq->pay_load.setValid(true);
+    preq->pay_load.echo_conf.setValid(true);
+
+    preq->LoadFrom(kv);
+    buffer.extend();
+    preq->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(preq);
+    return BUSINESS_SUCCESS;
+}
+int CBusiness::business_ts_config()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+    CCapwapAPConfReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv;
+
+    preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    SetValue(kv, STRING_TRAFFIC_STATICS_ENABLE, toString(ts_enable));
+    SetValue(kv, STRING_TRAFFIC_STATICS_INTERVAL, toString(ts_interval));
+
+    preq->pay_load.setValid(true);
+    preq->pay_load.traffic_statics_conf.setValid(true);
+
+    preq->LoadFrom(kv);
+    buffer.extend();
+    preq->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(preq);
+    return BUSINESS_SUCCESS;
+}
+int CBusiness::business_traffic_statics()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+
+    // 将流量信息更新到数据库
+    kvlist kv = ParseString(src_info);
+    string tx_speed = GetValue(kv, STRING_TX_SPEED);
+    string rx_speed = GetValue(kv, STRING_RX_SPEED);
+    string key_value = STRING_TX_SPEED"=" + tx_speed +
+        ","STRING_RX_SPEED"=" + rx_speed;
+    string cond = STRING_AP_MAC"='" + toString(ap->hw_addr) + "'";
+
+    DBI::Update(TO_STR(AP_LIST), key_value.c_str(), cond.c_str());
+
+    return BUSINESS_SUCCESS;
+}
+int CBusiness::business_reset()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+
+    CCapwapResetReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv;
+
+    preq = (CCapwapResetReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_RESET_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    preq->LoadFrom(kv);
+    buffer.extend();
+    preq->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(preq);
+    return BUSINESS_SUCCESS;
+}
+int CBusiness::business_upgrade()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+
+    CCapwapConfigUpdateReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv;
+
+    kvlist verlist;
+    string cond;
+    string softversion;
+    int ret = BUSINESS_SUCCESS;
+
+    preq = (CCapwapConfigUpdateReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_CONFIG_UPDATE_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    cond = STRING_DEV_MODEL"='" + toString(ap->dev_model) + "'";
+    verlist = data_line_from_db(TO_STR(UPGRADE_STRATEGY_LIST), cond, "", "");
+    softversion = GetValue(verlist, STRING_SOFTWARE_VERSION);
+
+    if ((softversion != "") && (softversion != ap->software_version))
+    {
+        preq->image_identifier.setValid(true);
+
+        SetValue(kv, STRING_DEV_MODEL, GetValue(verlist, STRING_DEV_MODEL));
+        SetValue(kv, STRING_SOFTWARE_VERSION, GetValue(verlist, STRING_SOFTWARE_VERSION));
+        SetValue(kv, STRING_FILE_NAME, GetValue(verlist, STRING_FILE_NAME));
+        SetValue(kv, STRING_FILE_SERVER, upgrade_server_addr);
+        SetValue(kv, STRING_DOWNLOAD_TYPE, upgrade_server_type);
+        SetValue(kv, STRING_FTP_USER_NAME, upgrade_server_username);
+        SetValue(kv, STRING_FTP_PASSWORD, upgrade_server_password);
+        SetValue(kv, STRING_FTP_PATH, upgrade_server_path);
+
+        preq->LoadFrom(kv);
+        buffer.extend();
+        preq->Assemble(buffer);
+
+        ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+        ret = BUSINESS_SUCCESS_IMAGE;
+    }
+    else
+    {
+        ret = BUSINESS_SUCCESS;
+    }
+
+    SAFE_DELETE(preq);
+
+    return ret;
+}
 
 
 
@@ -1025,6 +1268,8 @@ int flush_business(struct ap_dev *ap)
         if ((*it)->ap_dev() == ap)
         {
             list<CBusiness*>::iterator ite = it++;
+            dlog(LOG_DEBUG, "%s.%d {delete business AP %s TYPE %d}",
+                 __FUNC__, __LINE__, ap->hw_addr, (*ite)->type());
             SAFE_DELETE(*ite);
             businesses.erase(ite);
         }

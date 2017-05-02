@@ -193,6 +193,204 @@ static int dcac_opt(struct ubus_context *ctx, struct ubus_object *obj,
     return 0;
 }
 
+enum
+{
+    ECHO_INTERVAL,
+    ECHO_COUNT,
+    ECHO_MAX,
+};
+
+static const struct blobmsg_policy echo_config_policy[] =
+{
+    { UBUS_STRING_ECHO_INTERVAL, BLOBMSG_TYPE_INT32 },
+    { UBUS_STRING_ECHO_COUNT,  BLOBMSG_TYPE_INT32 },
+};
+
+static int dcac_echo_config(struct ubus_context *ctx, struct ubus_object *obj,
+                    struct ubus_request_data *req, const char *method, struct blob_attr *msg)
+{
+    int err;
+    struct blob_attr *tb[ECHO_MAX] = {NULL};
+    int result_code = 0;
+    string result;
+
+    err = blobmsg_parse(echo_config_policy, ECHO_MAX, tb, blob_data(msg), blob_len(msg));
+    if (0 != err)
+    {
+        dlog(LOG_ERR, "%s.%d blobmsg_parse error return %d", __FUNC__, __LINE__, err);
+        return -1;
+    }
+
+    echo_interval = ubus_get_u32(tb[ECHO_INTERVAL]);
+    echo_count  = ubus_get_u32(tb[ECHO_COUNT]);
+
+    dlog(LOG_DEBUG, "%s.%d {echo_interval = %d, echo_count = %d}",
+         __FUNC__, __LINE__, echo_interval, echo_count);
+
+    result_code = echo_config_process(result);
+
+    blob_buf_init(&b, 0);
+    blobmsg_add_u32(&b, "result_code", result_code);
+    blobmsg_add_string(&b, "result", result.c_str());
+
+    ubus_send_reply(ubus_ctx, req, b.head);
+
+    blob_buf_free(&b);
+
+    return 0;
+}
+
+enum
+{
+    TS_ENABLE,
+    TS_INTERVAL,
+    TS_MAX,
+};
+
+static const struct blobmsg_policy ts_config_policy[] =
+{
+    { UBUS_STRING_TS_ENABLE, BLOBMSG_TYPE_INT32 },
+    { UBUS_STRING_TS_INTERVAL,  BLOBMSG_TYPE_INT32 },
+};
+
+static int dcac_ts_config(struct ubus_context *ctx, struct ubus_object *obj,
+                    struct ubus_request_data *req, const char *method, struct blob_attr *msg)
+{
+    int err;
+    struct blob_attr *tb[TS_MAX] = {NULL};
+    int result_code = 0;
+    string result;
+
+    err = blobmsg_parse(ts_config_policy, TS_MAX, tb, blob_data(msg), blob_len(msg));
+    if (0 != err)
+    {
+        dlog(LOG_ERR, "%s.%d blobmsg_parse error return %d", __FUNC__, __LINE__, err);
+        return -1;
+    }
+
+    ts_enable   = ubus_get_u32(tb[TS_ENABLE]);
+    ts_interval = ubus_get_u32(tb[TS_INTERVAL]);
+
+    dlog(LOG_DEBUG, "%s.%d {ts_enable = %d, ts_interval = %d}",
+         __FUNC__, __LINE__, ts_enable, ts_interval);
+
+    result_code = ts_config_process(result);
+
+    blob_buf_init(&b, 0);
+    blobmsg_add_u32(&b, "result_code", result_code);
+    blobmsg_add_string(&b, "result", result.c_str());
+
+    ubus_send_reply(ubus_ctx, req, b.head);
+
+    blob_buf_free(&b);
+
+    return 0;
+}
+
+enum
+{
+    UPGRADE_ENABLE,
+    UPGRADE_MAX,
+};
+
+static const struct blobmsg_policy upgrade_config_policy[] =
+{
+    { UBUS_STRING_UPGRADE_ENABLE, BLOBMSG_TYPE_INT32 },
+};
+
+static int dcac_upgrade_config(struct ubus_context *ctx, struct ubus_object *obj,
+                    struct ubus_request_data *req, const char *method, struct blob_attr *msg)
+{
+    int err;
+    struct blob_attr *tb[UPGRADE_MAX] = {NULL};
+    int result_code = 0;
+    string result;
+
+    err = blobmsg_parse(upgrade_config_policy, UPGRADE_MAX, tb, blob_data(msg), blob_len(msg));
+    if (0 != err)
+    {
+        dlog(LOG_ERR, "%s.%d blobmsg_parse error return %d", __FUNC__, __LINE__, err);
+        return -1;
+    }
+
+    upgrade_enable   = ubus_get_u32(tb[UPGRADE_ENABLE]);
+
+    dlog(LOG_DEBUG, "%s.%d {upgrade_enable = %d}", __FUNC__, __LINE__, upgrade_enable);
+
+    result_code = upgrade_config_process(result);
+
+    blob_buf_init(&b, 0);
+    blobmsg_add_u32(&b, "result_code", result_code);
+    blobmsg_add_string(&b, "result", result.c_str());
+
+    ubus_send_reply(ubus_ctx, req, b.head);
+
+    blob_buf_free(&b);
+
+    return 0;
+}
+
+enum
+{
+    DOWNLOAD_TYPE,
+    FILE_SERVER,
+    FTP_USER_NAME,
+    FTP_PASSWORD,
+    FTP_PATH,
+    UPGRADE_SERVER_MAX,
+};
+
+static const struct blobmsg_policy upgrade_server_policy[] =
+{
+    { UBUS_STRING_UPGRADE_DOWNLOAD_TYPE, BLOBMSG_TYPE_STRING },
+    { UBUS_STRING_UPGRADE_FILE_SERVER,   BLOBMSG_TYPE_STRING },
+    { UBUS_STRING_UPGRADE_FTP_USER_NAME, BLOBMSG_TYPE_STRING },
+    { UBUS_STRING_UPGRADE_FTP_PASSWORD,  BLOBMSG_TYPE_STRING },
+    { UBUS_STRING_UPGRADE_FTP_PATH,      BLOBMSG_TYPE_STRING },
+};
+
+static int dcac_upgrade_server(struct ubus_context *ctx, struct ubus_object *obj,
+                    struct ubus_request_data *req, const char *method, struct blob_attr *msg)
+{
+    int err;
+    struct blob_attr *tb[UPGRADE_SERVER_MAX] = {NULL};
+    int result_code = 0;
+    string result;
+
+    err = blobmsg_parse(upgrade_server_policy, UPGRADE_SERVER_MAX, tb, blob_data(msg), blob_len(msg));
+    if (0 != err)
+    {
+        dlog(LOG_ERR, "%s.%d blobmsg_parse error return %d", __FUNC__, __LINE__, err);
+        return -1;
+    }
+
+    upgrade_server_type   = ubus_get_string(tb[DOWNLOAD_TYPE]);
+    upgrade_server_addr   = ubus_get_string(tb[FILE_SERVER]);
+    upgrade_server_username   = ubus_get_string(tb[FTP_USER_NAME]);
+    upgrade_server_password   = ubus_get_string(tb[FTP_PASSWORD]);
+    upgrade_server_path   = ubus_get_string(tb[FTP_PATH]);
+
+    dlog(LOG_DEBUG, "%s.%d {upgrade_server_type = %s, upgrade_server_addr = %s,"
+         "upgrade_server_username = %s, upgrade_server_password = %s, upgrade_server_path = %s}",
+         __FUNC__, __LINE__,
+         upgrade_server_type.c_str(), upgrade_server_addr.c_str(),
+         upgrade_server_username.c_str(), upgrade_server_password.c_str(),
+         upgrade_server_path.c_str());
+
+    result_code = upgrade_server_process(result);
+
+    blob_buf_init(&b, 0);
+    blobmsg_add_u32(&b, "result_code", result_code);
+    blobmsg_add_string(&b, "result", result.c_str());
+
+    ubus_send_reply(ubus_ctx, req, b.head);
+
+    blob_buf_free(&b);
+
+    return 0;
+}
+
+
 
 #define UBUS_METHOD_COMPAT(name, func, policy, policy_size) \
     {name, func, 0/*mask*/, policy, policy_size}
@@ -200,6 +398,10 @@ static int dcac_opt(struct ubus_context *ctx, struct ubus_object *obj,
 static struct ubus_method dcac_methods[] = {
     UBUS_METHOD_COMPAT(UBUS_STRING_NOTIFY_STATUS, dcac_notify_status, notify_status_policy, ARRAY_SIZE(notify_status_policy)),
     UBUS_METHOD_COMPAT(UBUS_STRING_OPT, dcac_opt, opt_policy, ARRAY_SIZE(opt_policy)),
+    UBUS_METHOD_COMPAT(UBUS_STRING_ECHO_CONFIG, dcac_echo_config, echo_config_policy, ARRAY_SIZE(echo_config_policy)),
+    UBUS_METHOD_COMPAT(UBUS_STRING_TS_CONFIG, dcac_ts_config, ts_config_policy, ARRAY_SIZE(ts_config_policy)),
+    UBUS_METHOD_COMPAT(UBUS_STRING_UPGRADE_CONFIG, dcac_upgrade_config, upgrade_config_policy, ARRAY_SIZE(upgrade_config_policy)),
+    UBUS_METHOD_COMPAT(UBUS_STRING_UPGRADE_SERVER, dcac_upgrade_server, upgrade_server_policy, ARRAY_SIZE(upgrade_server_policy)),
 };
 
 static struct ubus_object_type dcac_object_type =
