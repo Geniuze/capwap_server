@@ -1562,3 +1562,66 @@ int CVSResultStrTlv::SaveTo(string &str, string ex)
 
     return 0;
 }
+
+int CVSReverseSSHTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(ssh_enable);
+    buffer.store32(listen_port);
+    buffer.store32(data_port);
+    buffer.store32(server_port);
+    buffer.store16(addr_len);
+    buffer.storerawbytes((uint8_t*)addr.c_str(), addr_len);
+
+    return 0;
+}
+int CVSReverseSSHTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    ssh_enable = toInt8(GetValue(kv, STRING_REVERSE_SSH_ENABLE + ex));
+    listen_port = toInt(GetValue(kv, STRING_REVERSE_SSH_LISTEN_PORT + ex));
+    data_port = toInt(GetValue(kv, STRING_REVERSE_SSH_DATA_PORT + ex));
+    server_port = toInt(GetValue(kv, STRING_REVERSE_SSH_SERVER_PORT + ex));
+    addr = GetValue(kv, STRING_REVERSE_SSH_ADDR + ex);
+    addr_len = addr.length();
+
+    _elength = 15 + addr_len;
+
+    return 0;
+}
+
+int CVSRadio11ACConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+    buffer.store8(radio_id);
+    buffer.store8(ldpc_enable);
+    buffer.store8(tx_enable);
+    buffer.store8(rx_enable);
+    buffer.store32(work_rate_11ac);
+
+    return 0;
+}
+int CVSRadio11ACConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    radio_id = toInt8(GetValue(kv, TO_STR(STRING_RADIO_ID) + ex));
+    ldpc_enable = toInt8(GetValue(kv, TO_STR(STRING_RADIO_LDPC) + ex));
+    tx_enable = toInt8(GetValue(kv, TO_STR(STRING_RADIO_ACTX) + ex));
+    rx_enable = toInt8(GetValue(kv, TO_STR(STRING_RADIO_ACRX) + ex));
+    work_rate_11ac = toInt(GetValue(kv, TO_STR(STRING_RADIO_RATE_11AC) + ex));
+
+    _elength = 8;
+
+    return 0;
+}

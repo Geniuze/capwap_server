@@ -34,6 +34,10 @@ enum
     CAPWAP_BUSINESS_TS_CONFIG,         // 配置AP流量上报间隔及开关
     CAPWAP_BUSINESS_RESET,             // 重启AP状态
     CAPWAP_BUSINESS_UPGRADE,           // 页面升级业务
+    CAPWAP_BUSINESS_REVERSE_SSH,       // 页面配置反向SSH
+    CAPWAP_BUSINESS_AP_PASSWORD,       // 页面修改AP密码
+    CAPWAP_BUSINESS_AC_IPADDR,           // 页面修改AC地址
+    CAPWAP_BUSINESS_RUN_MODE,          // 页面修改AP运行模式
     CAPWAP_BUSINESS_MAX,               // 业务处理最大值
 };
 enum
@@ -119,6 +123,10 @@ public:
     int business_traffic_statics();
     int business_reset();
     int business_upgrade();
+    int business_reverse_ssh();
+    int business_ap_password();
+    int business_ac_ipaddr();
+    int business_run_mode();
 
     void set_business_type(int type)
     {

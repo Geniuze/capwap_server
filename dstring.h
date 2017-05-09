@@ -59,6 +59,7 @@
 #define STRING_RX_SPEED "rx_speed"
 
 #define STRING_NAME "name"
+#define STRING_DESCRIBE "describe"
 #define STRING_REPORT_STATION_INFO_ENABLE   report_station_info_enable
 #define STRING_REPORT_STATION_INFO_INTERVAL report_station_info_interval
 #define STRING_ROMING_CONFIG_ENABLE roming_enable
@@ -86,6 +87,10 @@
 #define STRING_RADIO_CHANNEL radio_channel
 #define STRING_RADIO_TXPOWER radio_txpower
 #define STRING_RADIO_SPACE radio_space
+#define STRING_RADIO_LDPC radio_ldpc
+#define STRING_RADIO_ACTX radio_actx
+#define STRING_RADIO_ACRX radio_acrx
+#define STRING_RADIO_RATE_11AC radio_rate_11ac
 #define STRING_RADIO_CHWIDTH radio_chwidth
 #define STRING_RADIO_RTS radio_rts
 #define STRING_RADIO_FRAGMENT radio_fragment
@@ -101,7 +106,7 @@
 #define STRING_RADIO_A_MPDU radio_ampdu
 #define STRING_RADIO_A_MSDU radio_amsdu
 #define STRING_RADIO_SHORT_GI radio_shortgi
-#define STRING_RADIO_COUNTRY_CODE radio_couuntry_code
+#define STRING_RADIO_COUNTRY_CODE radio_country_code
 #define STRING_RADIO_11NONLY radio_11nonly
 #define STRING_RADIO_SHORT_PREAMBLE radio_short_preamble
 #define STRING_RADIO_AUTO_CHANNEL radio_auto_channel
@@ -117,6 +122,7 @@
 #define STRING_WLAN_ESSID_ENCODE wlan_essid_encode
 #define STRING_WLAN_AUTH_TYPE wlan_auth_type
 #define STRING_WLAN_PORTAL_TYPE "wlan_portal_type"
+#define STRING_WLAN_PORTAL_COSTOM_NAME "wlan_portal_custom_name" // portal页定制策略
 #define STRING_WLAN_PORTAL_URL wlan_portal_url
 #define STRING_WLAN_WX_USER "wlan_wx_user_name"
 #define STRING_WLAN_SECURE_STRATEGY wlan_secure_strategy_name
@@ -246,6 +252,23 @@
 #define STRING_RESULT_STR "result_str"
 #define STRING_RADIO_ID "radio_id"  // 数据库中无此配置
 #define STRING_COUNT "count"
+
+// 反向SSH宏
+#define STRING_REVERSE_SSH_ENABLE "reverse_ssh_enable"
+#define STRING_REVERSE_SSH_LISTEN_PORT "listen_port"
+#define STRING_REVERSE_SSH_DATA_PORT "data_port"
+#define STRING_REVERSE_SSH_SERVER_PORT "server_port"
+#define STRING_REVERSE_SSH_ADDR "addr"
+
+// AP密码修改宏
+#define STRING_FRONT_PASSWORD "front_password"
+#define STRING_SSH_PASSWORD "ssh_password"
+
+// 修改AC地址
+#define STRING_AC_ADDR "ac_ipaddr"
+
+// 修改运行模式
+#define STRING_RUN_MODE "run_mode"
 
 
 string toString(uint32_t value);

@@ -115,6 +115,7 @@ int CVendorSpecPayLoadTlv::Assemble(CBuffer &buffer)
     actl_user_info.Assemble(buffer);
     ntp_server.Assemble(buffer);
     portal_custom.Assemble(buffer);
+    reverse_ssh.Assemble(buffer);
 
     return 0;
 }
@@ -230,6 +231,11 @@ int CVendorSpecPayLoadTlv::LoadFrom(kvlist &kv,string ex)
     {
         portal_custom.LoadFrom(kv, ex);
         _elength += portal_custom.length() + 4;
+    }
+    if (reverse_ssh.isValid())
+    {
+        reverse_ssh.LoadFrom(kv, ex);
+        _elength += reverse_ssh.length() + 4;
     }
 
     return 0;
@@ -1596,6 +1602,85 @@ int CImageInfoTlv::LoadFrom(kvlist &kv, string ex)
         return 0;
 
     _elength = 20;
+
+    return 0;
+}
+
+int CAPPasswordConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store32(front_password_len);
+    buffer.storerawbytes((uint8_t *)front_password.c_str(), front_password_len);
+
+    buffer.store32(ssh_password_len);
+    buffer.storerawbytes((uint8_t *)ssh_password.c_str(), ssh_password_len);
+
+    return 0;
+}
+int CAPPasswordConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    front_password = GetValue(kv, STRING_FRONT_PASSWORD);
+    front_password_len = front_password.length();
+
+    ssh_password = GetValue(kv, STRING_SSH_PASSWORD);
+    ssh_password_len = ssh_password.length();
+
+    _elength = 8 + front_password_len + ssh_password_len;
+
+    return 0;
+}
+
+int CLocalACAddrConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(ac_addr_len);
+    buffer.storerawbytes((uint8_t*)ac_addr.c_str(), ac_addr_len);
+
+    return 0;
+}
+int CLocalACAddrConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    ac_addr = GetValue(kv, STRING_AC_ADDR);
+    ac_addr_len = ac_addr.length();
+
+    _elength = 1 + ac_addr_len;
+
+    return 0;
+}
+
+int CRunningModeConfTlv::Assemble(CBuffer &buffer)
+{
+    if (!isValid())
+        return 0;
+
+    AssembleEH(buffer);
+
+    buffer.store8(ap_running_mode);
+
+    return 0;
+}
+int CRunningModeConfTlv::LoadFrom(kvlist &kv, string ex)
+{
+    if (!isValid())
+        return 0;
+
+    ap_running_mode = toInt8(GetValue(kv, STRING_RUN_MODE));
+
+    _elength = 1;
 
     return 0;
 }

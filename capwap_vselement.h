@@ -879,6 +879,8 @@ public:
         work_rate_11ac = 0;
     }
     ~CVSRadio11ACConfTlv(){}
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVSWxAuthInfoTlv : public CElement
@@ -975,6 +977,9 @@ public:
         addr_len = 0;
     }
     ~CVSReverseSSHTlv(){}
+
+    int Assemble(CBuffer &buffer);
+    int LoadFrom(kvlist &kv, string ex="");
 };
 
 class CVS8021xConfTlv : public CElement

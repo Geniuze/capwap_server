@@ -148,6 +148,18 @@ int CBusiness::Process()
     case CAPWAP_BUSINESS_UPGRADE:
         ret = business_upgrade();
         break;
+    case CAPWAP_BUSINESS_REVERSE_SSH:
+        ret = business_reverse_ssh();
+        break;
+    case CAPWAP_BUSINESS_AP_PASSWORD:
+        ret = business_ap_password();
+        break;
+    case CAPWAP_BUSINESS_AC_IPADDR:
+        ret = business_ac_ipaddr();
+        break;
+    case CAPWAP_BUSINESS_RUN_MODE:
+        ret = business_run_mode();
+        break;
     default:
         dlog(LOG_ERR, "%s.%d unknown this business-type %d", __FUNC__, __LINE__, business_type);
         break;
@@ -273,7 +285,7 @@ int CBusiness::business_join_process()
         key_value.append(STRING_SOFTWARE_VERSION"='" + toString(ap->software_version) + "',");
         key_value.append(STRING_LEAVE_TIME"=NULL,");
         key_value.append(STRING_ONLINE_TIME"=" + toString(time(NULL)) + ",");
-        key_value.append(STRING_STATE"=" + toString(ap->state) + "");
+        key_value.append(STRING_STATE"=" + toString(ap->state));
 
         DBI::Update(TO_STR(AP_LIST), key_value.c_str(), cond.c_str());
         break;
@@ -451,9 +463,14 @@ int CBusiness::business_configure_process()
         prsp->tx_powers[i].setValid(true);
 
         if (ap->radios[i].radio_type & RADIO_TYPE_11A) // 5G radio
+        {
             prsp->ofdm_ctrls[i].setValid(true);
+            prsp->pay_loads[i].radio_11ac.setValid(true);
+        }
         else // 2G radio
+        {
             prsp->ds_ctrls[i].setValid(true);
+        }
 
         prsp->pay_loads[i].setValid(true);
         prsp->pay_loads[i].radio_conf.setValid(true);
@@ -1238,6 +1255,98 @@ int CBusiness::business_upgrade()
     return ret;
 }
 
+int CBusiness::business_reverse_ssh()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+    CCapwapAPConfReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv = ParseString(src_info);
+
+    preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    preq->pay_load.setValid(true);
+    preq->pay_load.reverse_ssh.setValid(true);
+
+    preq->LoadFrom(kv);
+    buffer.extend();
+    preq->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(preq);
+    return BUSINESS_SUCCESS;
+}
+int CBusiness::business_ap_password()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+    CCapwapAPConfReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv = ParseString(src_info);
+
+    preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    preq->ap_password_conf.setValid(true);
+
+    preq->LoadFrom(kv);
+    buffer.extend();
+    preq->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(preq);
+
+    return BUSINESS_SUCCESS;
+}
+int CBusiness::business_ac_ipaddr()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+    CCapwapAPConfReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv = ParseString(src_info);
+
+    preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    preq->local_ac_conf.setValid(true);
+
+    preq->LoadFrom(kv);
+    buffer.extend();
+    preq->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(preq);
+
+    return BUSINESS_SUCCESS;
+}
+int CBusiness::business_run_mode()
+{
+    dlog(LOG_DEBUG, "%s.%d {%s}", __FUNC__, __LINE__, src_info.c_str());
+    CCapwapAPConfReq *preq = NULL;
+    CBuffer buffer;
+    kvlist kv = ParseString(src_info);
+
+    preq = (CCapwapAPConfReq *)capwap_get_packet(CAPWAP_PACKET_TYPE_AP_CONFIG_REQ);
+    if (NULL == preq)
+        return BUSINESS_FAIL;
+
+    preq->running_mode_conf.setValid(true);
+
+    preq->LoadFrom(kv);
+    buffer.extend();
+    preq->Assemble(buffer);
+
+    ap->cl->write_cb(ap->cl, (char*)buffer.GetBuffer(), buffer.GetOffset());
+
+    SAFE_DELETE(preq);
+
+    return BUSINESS_SUCCESS;
+}
 
 
 
